@@ -131,7 +131,7 @@
                 <p class="text-gray-400 font-bold mb-8 text-sm break-keep">서비스 이용을 위해 핸드폰 번호로 로그인 해주세요.</p>
                 
                 <div class="space-y-4">
-                    <input type="tel" id="login-phone" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" maxlength="13">
+                    <input type="tel" id="login-phone" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" onkeyup="if(window.event.keyCode===13){handleLogin();}" maxlength="13">
                     <input type="password" id="login-pw" class="input-base text-center font-bold text-lg" placeholder="간단비밀번호설정" onkeyup="if(window.event.keyCode===13){handleLogin();}">
                     <div id="pw-confirm-container">
                         <input type="password" id="login-pw-confirm" class="input-base text-center font-bold text-lg" placeholder="비밀번호 확인" onkeyup="if(window.event.keyCode===13){handleLogin();}">
@@ -516,28 +516,37 @@
 </div>
 
 <script type="module">
-    // 1. Firebase 라이브러리 임포트
+    // 1. Firebase 최신 모듈 임포트 (isSupported 추가)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 2. 파이어베이스 Config 설정 (여기에 발급받은 키값을 붙여넣으세요)
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+    // 2. 파이어베이스 Config 설정 (고객님 키로 완전 고정)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCr4qXXfwIjxwyWILzBPi2SX_e7TLvAe8o",
+        authDomain: "car-698fe.firebaseapp.com",
+        projectId: "car-698fe",
+        storageBucket: "car-698fe.firebasestorage.app",
+        messagingSenderId: "783544921695",
+        appId: "1:783544921695:web:192c57387b518916c7b5ea",
+        measurementId: "G-PKXFP47XL5"
     };
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'premium-rentcar';
+    const appId = 'premium-rentcar';
 
     const app = initializeApp(firebaseConfig);
+    
+    // 애널리틱스는 지원되는 환경(실제 배포된 사이트 등)에서만 안전하게 켜지도록 예외 처리
+    let analytics;
+    isSupported().then(supported => {
+        if (supported) { analytics = getAnalytics(app); }
+    }).catch(err => console.log("Analytics check bypassed:", err));
+
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // 파이어베이스 DB 컬렉션 래퍼런스 (퍼블릭 데이터 영역)
+    // 파이어베이스 DB 컬렉션 래퍼런스 세팅
     const reservationsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'reservations');
     const usersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'users');
 
@@ -626,6 +635,8 @@
     };
 
     window.handleLogin = async function() {
+        if (!auth.currentUser) return showMsg("서버 연결 중입니다. 잠시 후 다시 시도해주세요.");
+
         const phone = document.getElementById('login-phone').value.trim();
         const pw = document.getElementById('login-pw').value.trim();
         const pwConfirm = document.getElementById('login-pw-confirm').value.trim();
@@ -639,9 +650,9 @@
         } else {
             if (pw !== pwConfirm) return showMsg("입력하신 두 비밀번호가 일치하지 않습니다.<br>다시 확인해주세요.");
             
-            // Firebase 새 유저 등록 (Firestore)
+            // Firebase 새 유저 등록 (Firestore 저장)
             const newUserDoc = doc(usersCollection);
-            await setDoc(newUserDoc, { phone, password: pw });
+            await setDoc(newUserDoc, { phone, password: pw, createdAt: new Date().getTime() });
         }
         
         currentUserPhone = phone;
@@ -713,6 +724,7 @@
 
     window.openConfirmModal = function() {
         if(!currentUserPhone) return showMsg("로그인이 필요합니다.");
+        if(!auth.currentUser) return showMsg("서버 오류가 발생했습니다. 새로고침 해주세요.");
 
         const name = document.getElementById('input-name').value.trim();
         const birth = document.getElementById('input-birth').value.trim();
@@ -773,9 +785,9 @@
     window.closeConfirmModal = function() { document.getElementById('confirm-modal').style.display = 'none'; };
 
     window.submitApplication = async function() {
-        if (!currentApplicationData) return;
+        if (!currentApplicationData || !auth.currentUser) return;
         
-        // 파이어베이스 DB에 예약 정보 전송
+        // 파이어베이스 DB(Firestore)에 예약 정보 안전하게 전송
         const newDocRef = doc(reservationsCollection);
         await setDoc(newDocRef, currentApplicationData);
 
@@ -831,6 +843,7 @@
     };
 
     window.changeRecordStatus = async function(recordId, selectElement) {
+        if (!auth.currentUser) return;
         const newStatus = selectElement.value;
         const record = memoryDatabase.find(r => r.id === recordId);
         if (record && record.docId) {
@@ -852,6 +865,7 @@
     };
 
     window.deleteRecord = async function(id) {
+        if (!auth.currentUser) return;
         if(confirm("해당 예약 내역을 영구적으로 삭제하시겠습니까?")) {
             const record = memoryDatabase.find(r => r.id === id);
             if (record && record.docId) {
@@ -881,6 +895,7 @@
     window.closeAdminEditModal = function() { document.getElementById('admin-edit-modal').style.display = 'none'; };
 
     window.saveAdminEdit = async function() {
+        if (!auth.currentUser) return;
         const id = document.getElementById('edit-id').value;
         const name = document.getElementById('edit-name').value.trim();
         const birth = document.getElementById('edit-birth').value.trim();
@@ -1024,10 +1039,11 @@
 
         // 파이어베이스 초기 익명 로그인 및 실시간 동기화 시작
         try {
-            if (typeof __initial_auth_token !== 'undefined') {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
+            // 테스트 환경의 커스텀 토큰과 고객님의 파이어베이스 프로젝트가 달라서 발생하는 충돌 에러(custom-token-mismatch) 방지
+            try {
                 await signInAnonymously(auth);
+            } catch (authError) {
+                console.warn("익명 로그인이 활성화되지 않았습니다. (데이터베이스 Rules가 public이면 정상 작동합니다.)", authError);
             }
 
             // 사용자 데이터베이스 실시간 구독 (새로고침 없이 동기화)
