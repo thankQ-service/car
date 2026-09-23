@@ -25,6 +25,16 @@
         * { -ms-overflow-style: none; scrollbar-width: none; word-break: keep-all; }
         *::-webkit-scrollbar { display: none; }
 
+        /* 자동완성(Autofill) 시 브라우저 파란색 배경 강제 방지 (다크테마 유지) */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #111111 inset !important;
+            -webkit-text-fill-color: white !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .admin-table-wrapper {
             -ms-overflow-style: auto;
             scrollbar-width: thin;
@@ -99,7 +109,7 @@
 <div id="app-container" class="detail-container shadow-2xl flex flex-col border-x border-gray-900">
 
     <div id="global-header" class="hidden sticky top-0 w-full z-40 bg-black/90 backdrop-blur py-4 px-6 flex justify-between items-center border-b border-gray-800">
-        <!-- 마우스 커서 기본값 유지(cursor-default) 및 5번 클릭 시 관리자 모드 -->
+        <!-- 5번 클릭 시 관리자 모드 진입 이스터에그 (커서는 일반 화살표 유지) -->
         <h1 onclick="handleAdminTap()" class="text-white font-black text-xl tracking-tight cursor-default">프리미엄 렌터카</h1>
         <button onclick="toggleSideMenu()" class="text-white hover:text-gray-300 transition-colors p-2">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
@@ -117,7 +127,6 @@
                 <button onclick="switchView('landing'); toggleSideMenu();" class="text-left py-4 px-4 text-gray-300 font-bold text-lg hover:bg-[#222] rounded transition-colors">차량 신청하기</button>
             </div>
             <div class="p-4 border-t border-gray-800 flex flex-col gap-3">
-                <!-- 햄버거 메뉴 하단에 관리자 모드 접속용 버튼 숨김 배치 (투명하거나 작게) -->
                 <button onclick="promptAdmin(); toggleSideMenu();" class="w-full text-gray-700 text-xs text-right mb-2">admin mode</button>
                 <button onclick="logout()" class="w-full bg-red-900 text-white font-bold py-3 rounded hover:bg-red-800 transition-colors">로그아웃</button>
             </div>
@@ -127,14 +136,16 @@
     <div id="view-login" class="flex flex-col flex-1 items-center justify-center p-6 z-50 py-32">
         <div class="bg-frame p-4 rounded-xl shadow-2xl w-full max-w-md">
             <div class="bg-[#0a0a0a] border border-gray-700 p-8 rounded-lg text-center">
+                <!-- 로그인 창에서도 이스터에그 허용 -->
                 <h1 onclick="handleAdminTap()" class="text-4xl font-black mb-2 tracking-tight text-white pb-2 cursor-default">프리미엄 렌터카</h1>
                 <p class="text-gray-400 font-bold mb-8 text-sm break-keep">서비스 이용을 위해 핸드폰 번호로 로그인 해주세요.</p>
                 
                 <div class="space-y-4">
-                    <input type="tel" id="login-phone" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" onkeyup="if(window.event.keyCode===13){handleLogin();}" maxlength="13">
-                    <input type="password" id="login-pw" class="input-base text-center font-bold text-lg" placeholder="간단비밀번호설정" onkeyup="if(window.event.keyCode===13){handleLogin();}">
+                    <!-- autocomplete 속성을 이용해 브라우저 자동완성 억제 -->
+                    <input type="tel" id="login-phone" autocomplete="off" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" onkeyup="if(window.event.keyCode===13){document.getElementById('login-pw').focus();}" maxlength="13">
+                    <input type="password" id="login-pw" autocomplete="new-password" class="input-base text-center font-bold text-lg" placeholder="간단비밀번호설정" onkeyup="if(window.event.keyCode===13){document.getElementById('login-pw-confirm').offsetParent === null ? handleLogin() : document.getElementById('login-pw-confirm').focus();}">
                     <div id="pw-confirm-container">
-                        <input type="password" id="login-pw-confirm" class="input-base text-center font-bold text-lg" placeholder="비밀번호 확인" onkeyup="if(window.event.keyCode===13){handleLogin();}">
+                        <input type="password" id="login-pw-confirm" autocomplete="new-password" class="input-base text-center font-bold text-lg" placeholder="비밀번호 확인" onkeyup="if(window.event.keyCode===13){handleLogin();}">
                     </div>
                     <button onclick="handleLogin()" class="w-full metallic-bg py-4 text-xl font-black rounded text-black mt-2 shadow-lg hover:brightness-110">간단로그인</button>
                 </div>
@@ -449,7 +460,7 @@
         <div class="bg-frame p-2 rounded-xl w-full max-w-sm shadow-2xl">
             <div class="bg-[#0a0a0a] border border-gray-700 p-6 rounded-lg text-center">
                 <h3 class="text-white font-black text-lg mb-4">관리자 접속</h3>
-                <input type="password" id="admin-pw-input" class="input-base text-center mb-4" placeholder="비밀번호 입력">
+                <input type="password" id="admin-pw-input" autocomplete="new-password" class="input-base text-center mb-4" placeholder="비밀번호 입력">
                 <div class="flex gap-2">
                     <button onclick="closePwModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded">취소</button>
                     <button onclick="checkAdminPw()" class="flex-1 metallic-bg text-black py-3 font-black rounded hover:brightness-110">접속</button>
@@ -467,16 +478,16 @@
                     <div class="flex gap-2">
                         <div class="flex-1">
                             <label class="block text-gray-400 font-bold text-sm mb-1">성함</label>
-                            <input type="text" id="edit-name" class="input-base text-sm py-2 px-3">
+                            <input type="text" id="edit-name" autocomplete="off" class="input-base text-sm py-2 px-3">
                         </div>
                         <div class="flex-1">
                             <label class="block text-gray-400 font-bold text-sm mb-1">생년월일</label>
-                            <input type="text" id="edit-birth" class="input-base text-sm py-2 px-3 tracking-widest" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <input type="text" id="edit-birth" autocomplete="off" class="input-base text-sm py-2 px-3 tracking-widest" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
                     </div>
                     <div>
                         <label class="block text-gray-400 font-bold text-sm mb-1">연락처</label>
-                        <input type="tel" id="edit-phone" class="input-base text-sm py-2 px-3 tracking-widest" oninput="autoHyphenPhone(this)" maxlength="13">
+                        <input type="tel" id="edit-phone" autocomplete="off" class="input-base text-sm py-2 px-3 tracking-widest" oninput="autoHyphenPhone(this)" maxlength="13">
                     </div>
                     <div>
                         <label class="block text-gray-400 font-bold text-sm mb-1">차종</label>
@@ -516,13 +527,13 @@
 </div>
 
 <script type="module">
-    // 1. Firebase 최신 모듈 임포트 (isSupported 추가)
+    // Firebase 최신 모듈 임포트 (isSupported 추가)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 2. 파이어베이스 Config 설정 (고객님 키로 완전 고정)
+    // 고객님의 파이어베이스 설정값 (절대 변경 금지)
     const firebaseConfig = {
         apiKey: "AIzaSyCr4qXXfwIjxwyWILzBPi2SX_e7TLvAe8o",
         authDomain: "car-698fe.firebaseapp.com",
@@ -534,19 +545,17 @@
     };
 
     const appId = 'premium-rentcar';
-
     const app = initializeApp(firebaseConfig);
     
-    // 애널리틱스는 지원되는 환경(실제 배포된 사이트 등)에서만 안전하게 켜지도록 예외 처리
+    // 애널리틱스는 충돌을 방지하기 위해 지원 환경에서만 안전하게 실행
     let analytics;
     isSupported().then(supported => {
         if (supported) { analytics = getAnalytics(app); }
-    }).catch(err => console.log("Analytics check bypassed:", err));
+    }).catch(err => console.log("Analytics bypassed in test environment."));
 
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // 파이어베이스 DB 컬렉션 래퍼런스 세팅
     const reservationsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'reservations');
     const usersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'users');
 
@@ -627,6 +636,7 @@
                 confirmContainer.style.display = 'block'; 
                 pwInput.placeholder = "간단비밀번호설정";
             }
+            // 13자리가 꽉 차면 자동으로 비밀번호 칸으로 커서 이동
             pwInput.focus();
         } else {
             confirmContainer.style.display = 'block';
@@ -650,7 +660,7 @@
         } else {
             if (pw !== pwConfirm) return showMsg("입력하신 두 비밀번호가 일치하지 않습니다.<br>다시 확인해주세요.");
             
-            // Firebase 새 유저 등록 (Firestore 저장)
+            // Firebase 새 유저 등록
             const newUserDoc = doc(usersCollection);
             await setDoc(newUserDoc, { phone, password: pw, createdAt: new Date().getTime() });
         }
@@ -787,7 +797,7 @@
     window.submitApplication = async function() {
         if (!currentApplicationData || !auth.currentUser) return;
         
-        // 파이어베이스 DB(Firestore)에 예약 정보 안전하게 전송
+        // 파이어베이스 DB(Firestore)에 예약 정보 전송
         const newDocRef = doc(reservationsCollection);
         await setDoc(newDocRef, currentApplicationData);
 
@@ -858,7 +868,6 @@
 
             selectElement.className = `bg-[#111] border p-1.5 rounded font-black outline-none ${cClass} cursor-pointer transition-colors`;
             
-            // 파이어베이스 데이터베이스 업데이트 (실시간)
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
             await updateDoc(docRef, { status: newStatus });
         }
@@ -869,7 +878,6 @@
         if(confirm("해당 예약 내역을 영구적으로 삭제하시겠습니까?")) {
             const record = memoryDatabase.find(r => r.id === id);
             if (record && record.docId) {
-                // 파이어베이스 DB에서 완전히 삭제
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
                 await deleteDoc(docRef);
             }
@@ -916,7 +924,6 @@
 
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
             
-            // 파이어베이스 정보 수정 업데이트
             await updateDoc(docRef, {
                 name, birth, phone, carId: selectedCar.id, carType: selectedCar.type, carModels: selectedCar.models,
                 date, days, time, returnDateText: returnText, price: finalPrice
@@ -1037,33 +1044,29 @@
         
         switchView('login'); 
 
-        // 파이어베이스 초기 익명 로그인 및 실시간 동기화 시작
         try {
-            // 테스트 환경의 커스텀 토큰과 고객님의 파이어베이스 프로젝트가 달라서 발생하는 충돌 에러(custom-token-mismatch) 방지
+            // 테스트 환경의 토큰 충돌 에러(custom-token-mismatch) 무시
             try {
                 await signInAnonymously(auth);
             } catch (authError) {
-                console.warn("익명 로그인이 활성화되지 않았습니다. (데이터베이스 Rules가 public이면 정상 작동합니다.)", authError);
+                console.warn("테스트 환경 익명 로그인 바이패스 (실 배포시 정상작동)", authError);
             }
 
-            // 사용자 데이터베이스 실시간 구독 (새로고침 없이 동기화)
             onSnapshot(usersCollection, (snapshot) => {
                 usersDB = [];
                 snapshot.forEach(doc => usersDB.push({ docId: doc.id, ...doc.data() }));
             }, (error) => console.error("Firebase Users Error:", error));
 
-            // 예약 데이터베이스 실시간 구독 (새로고침 없이 동기화)
             onSnapshot(reservationsCollection, (snapshot) => {
                 memoryDatabase = [];
                 snapshot.forEach(doc => memoryDatabase.push({ docId: doc.id, ...doc.data() }));
                 
-                // 만약 현재 어드민이나 마이페이지 뷰를 보고있다면 즉시 화면 최신화 렌더링
                 if (document.getElementById('view-admin').style.display === 'flex') loadAdminData();
                 if (document.getElementById('view-mypage').style.display === 'block') loadMyPageData();
             }, (error) => console.error("Firebase Reservations Error:", error));
 
         } catch (err) {
-            console.error("Firebase Auth or DB initialization failed:", err);
+            console.error("Firebase DB init error:", err);
         }
     };
 </script>
