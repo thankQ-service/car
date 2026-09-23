@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>프리미엄 렌터카</title>
+    
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Pretendard', 'sans-serif'] },
+                    colors: {
+                        metallic: { light: '#f5f5f5', DEFAULT: '#d4d4d4', dark: '#a3a3a3' },
+                        frame: '#cccccc' 
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { -ms-overflow-style: none; scrollbar-width: none; word-break: keep-all; }
+        *::-webkit-scrollbar { display: none; }
+
+        .admin-table-wrapper {
+            -ms-overflow-style: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #555 #111;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .admin-table-wrapper::-webkit-scrollbar { display: block; height: 12px; }
+        .admin-table-wrapper::-webkit-scrollbar-track { background: #111; border-radius: 0 0 8px 8px; }
+        .admin-table-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 8px; border: 3px solid #111; }
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            user-select: none;
+            overflow-x: hidden;
+            position: relative;
+            padding: 10px;
+        }
+
+        /* 전체 금빛 테두리 적용 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 2px solid #D4AF37; 
+            border-radius: 8px; 
+            pointer-events: none; 
+            z-index: 9999; 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); 
+        }
+
+        .detail-container {
+            width: 100%; max-width: 860px; margin: 0 auto; overflow-x: hidden;
+            background-color: #000000; position: relative; min-height: 100vh; padding: 20px; 
+            z-index: 10;
+        }
+        .detail-container img { width: 100%; max-width: 100%; height: auto; display: block; }
+
+        .heavy-underline {
+            text-decoration: underline; text-decoration-thickness: 6px;
+            text-decoration-color: #ff3b3b; text-underline-offset: 4px;
+        }
+        
+        .highlight-yellow {
+            background-color: rgba(255, 235, 59, 0.15); color: #ffeb3b;
+            padding: 4px 8px; display: inline; line-height: 1.8; border-radius: 4px;
+        }
+
+        .metallic-bg {
+            background: linear-gradient(to bottom, #ffffff 0%, #cccccc 50%, #888888 100%);
+            border-top: 2px solid #ffffff; border-bottom: 2px solid #333333; color: #000000;
+        }
+
+        .input-base {
+            width: 100%; background-color: #111111; border: 1px solid #555555;
+            color: #ffffff; padding: 16px; font-size: 1.125rem; outline: none; border-radius: 4px;
+        }
+        .input-base:focus { border-color: #ffffff; background-color: #1a1a1a; }
+        .input-base::placeholder { color: #666666; }
+        
+        select.input-base { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); cursor: pointer; width: 24px; height: 24px;
+        }
+    </style>
+</head>
+<body class="flex justify-center bg-[#050505]">
+
+<div id="app-container" class="detail-container shadow-2xl flex flex-col border-x border-gray-900">
+
+    <div id="global-header" class="hidden sticky top-0 w-full z-40 bg-black/90 backdrop-blur py-4 px-6 flex justify-between items-center border-b border-gray-800">
+        <!-- 마우스 커서 기본값 유지(cursor-default) 및 5번 클릭 시 관리자 모드 -->
+        <h1 onclick="handleAdminTap()" class="text-white font-black text-xl tracking-tight cursor-default">프리미엄 렌터카</h1>
+        <button onclick="toggleSideMenu()" class="text-white hover:text-gray-300 transition-colors p-2">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+    </div>
+
+    <div id="side-menu" class="hidden fixed inset-0 bg-black/95 z-50 flex justify-end backdrop-blur-sm transition-opacity">
+        <div class="w-64 bg-[#111] h-full border-l border-gray-700 flex flex-col">
+            <div class="p-6 flex justify-between items-center border-b border-gray-800">
+                <span class="text-white font-black text-xl">메뉴</span>
+                <button onclick="toggleSideMenu()" class="text-gray-400 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="flex-1 p-4 flex flex-col gap-2">
+                <button onclick="goToMyPage()" class="text-left py-4 px-4 text-white font-bold text-lg hover:bg-[#222] rounded transition-colors">조회내역 확인하기</button>
+                <button onclick="switchView('landing'); toggleSideMenu();" class="text-left py-4 px-4 text-gray-300 font-bold text-lg hover:bg-[#222] rounded transition-colors">차량 신청하기</button>
+            </div>
+            <div class="p-4 border-t border-gray-800 flex flex-col gap-3">
+                <!-- 햄버거 메뉴 하단에 관리자 모드 접속용 버튼 숨김 배치 (투명하거나 작게) -->
+                <button onclick="promptAdmin(); toggleSideMenu();" class="w-full text-gray-700 text-xs text-right mb-2">admin mode</button>
+                <button onclick="logout()" class="w-full bg-red-900 text-white font-bold py-3 rounded hover:bg-red-800 transition-colors">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-login" class="flex flex-col flex-1 items-center justify-center p-6 z-50 py-32">
+        <div class="bg-frame p-4 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="bg-[#0a0a0a] border border-gray-700 p-8 rounded-lg text-center">
+                <h1 onclick="handleAdminTap()" class="text-4xl font-black mb-2 tracking-tight text-white pb-2 cursor-default">프리미엄 렌터카</h1>
+                <p class="text-gray-400 font-bold mb-8 text-sm break-keep">서비스 이용을 위해 핸드폰 번호로 로그인 해주세요.</p>
+                
+                <div class="space-y-4">
+                    <input type="tel" id="login-phone" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" maxlength="13">
+                    <input type="password" id="login-pw" class="input-base text-center font-bold text-lg" placeholder="간단비밀번호설정" onkeyup="if(window.event.keyCode===13){handleLogin();}">
+                    <div id="pw-confirm-container">
+                        <input type="password" id="login-pw-confirm" class="input-base text-center font-bold text-lg" placeholder="비밀번호 확인" onkeyup="if(window.event.keyCode===13){handleLogin();}">
+                    </div>
+                    <button onclick="handleLogin()" class="w-full metallic-bg py-4 text-xl font-black rounded text-black mt-2 shadow-lg hover:brightness-110">간단로그인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-landing" class="hidden w-full pb-10">
+        
+        <div class="py-20 px-6 text-center border-b border-gray-800">
+            <h2 class="text-3xl md:text-5xl font-black mb-6 leading-tight text-white">내 차가 없어도 떠날수 있는 캠핑<br><span class="text-xl md:text-3xl font-bold text-gray-400 mt-4 inline-block">꼭 캠핑만 가지 않아도 됩니다.</span></h2>
+            <img src="https://i.postimg.cc/g0HmNKNF/car-6603726-1280.jpg" alt="감성 캠핑" class="w-full h-auto max-h-[350px] object-cover rounded-lg mt-8 shadow-2xl border border-gray-700">
+        </div>
+
+        <div class="py-20 px-6 text-center border-b border-gray-800">
+            <div class="inline-block px-6 py-2 border-2 border-yellow-400 rounded-full mb-8"><p class="text-xl font-black text-yellow-400">잠깐!</p></div>
+            <p class="text-2xl mb-6 font-bold text-gray-300">여기서 제일 중요한 사실</p>
+            <p class="text-4xl md:text-5xl font-black mb-8 leading-tight text-white"><span class="heavy-underline">집 앞까지</span> 렌터카를</p>
+            <div class="mb-10 text-4xl md:text-5xl text-blue-400 font-black tracking-tight inline-block border-b-2 border-blue-400 pb-2">딜리버리 해드립니다</div>
+            
+            <img src="https://i.postimg.cc/R0L4XTXz/Extract-and-recreate-as-a-standalone-photograph-A-1790127976711.png" alt="차량 탁송" class="w-full h-auto max-h-[300px] object-cover rounded-lg mb-8 shadow-2xl border border-gray-700">
+            
+            <div class="mt-4">
+                <p class="text-lg md:text-xl font-bold text-gray-300 bg-[#111] inline-block px-6 py-4 border border-gray-600 rounded-lg break-keep leading-relaxed shadow-lg">내가 정한 시간에 배달받고,<br>하루 동안 편안하게 이용하세요.</p>
+            </div>
+        </div>
+
+        <div class="py-20 px-6 text-center border-b border-gray-800 bg-[#0a0a0a]">
+            <div class="inline-block px-5 py-2 border border-gray-600 rounded-full mb-6 bg-neutral-900 shadow-lg"><span class="text-gray-300 font-bold text-sm tracking-wide">프리미엄 배달 서비스 지역 안내</span></div>
+            <div class="bg-frame p-2 md:p-3 rounded-xl shadow-xl w-full max-w-lg mx-auto">
+                <div class="bg-[#111] border border-gray-700 py-10 px-4 rounded-lg">
+                    <p class="text-3xl md:text-4xl font-black text-white leading-tight mb-4 break-keep">오직 <span class="text-yellow-400 underline decoration-4 underline-offset-4">서울 전역 및</span><br><span class="text-yellow-400 underline decoration-4 underline-offset-4">경기 지역에서만 가능</span></p>
+                    <p class="text-base text-gray-400 font-bold break-keep mb-6">(북부, 남부, 동부, 서부 전 지역 해당)</p>
+                    <p class="text-xl md:text-2xl text-blue-300 font-black break-keep leading-relaxed">빠르고 완벽한 프리미엄<br>딜리버리가<br>가능합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="py-20 px-6 text-center border-b border-gray-800">
+            <h2 class="text-3xl md:text-4xl font-black mb-12 text-white">프리미엄 렌터카의 <span class="text-yellow-400">특별함</span></h2>
+            <div class="flex flex-col gap-6 max-w-lg mx-auto">
+                <div class="bg-frame p-1 rounded-xl shadow-xl">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left flex items-start gap-4">
+                        <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center font-black text-xl text-yellow-400 shrink-0">1</div>
+                        <div>
+                            <h3 class="text-xl font-black text-white mb-2">신차급 완벽한 컨디션</h3>
+                            <p class="text-gray-400 font-bold text-sm break-keep leading-relaxed">철저하게 관리된 신차급 차량만 배차하며, 고객님의 안전하고 쾌적한 주행을 보장합니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-frame p-1 rounded-xl shadow-xl">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left flex items-start gap-4">
+                        <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center font-black text-xl text-yellow-400 shrink-0">2</div>
+                        <div>
+                            <h3 class="text-xl font-black text-white mb-2">프리미엄 세차 완료</h3>
+                            <p class="text-gray-400 font-bold text-sm break-keep leading-relaxed">모든 차량은 배차 직전 실내외 고압 스팀 세차를 거쳐 새 차 같은 쾌적함을 제공합니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-frame p-1 rounded-xl shadow-xl">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left flex items-start gap-4">
+                        <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center font-black text-xl text-yellow-400 shrink-0">3</div>
+                        <div>
+                            <h3 class="text-xl font-black text-white mb-2">안심 탁송 서비스</h3>
+                            <p class="text-gray-400 font-bold text-sm break-keep leading-relaxed">전문 탁송 기사님이 지정하신 시간과 장소에 정확하고 친절하게 차량을 인도해 드립니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="py-20 px-6 text-center border-b border-gray-800">
+            <h2 class="text-3xl md:text-4xl font-black mb-12 text-white">프리미엄 라인업</h2>
+            <div class="bg-frame p-2 md:p-3 rounded-xl shadow-2xl max-w-4xl mx-auto">
+                <div id="car-list-container" class="bg-[#0a0a0a] border border-gray-700 p-4 md:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 자바스크립트를 통해 차량 리스트가 렌더링 됩니다. -->
+                </div>
+                <p class="text-xs text-gray-500 font-bold mt-4 break-keep">※ 차량 색상 및 휠 디자인은 실제 배차되는 차량과 다를 수 있는 예시(참고) 사진입니다.</p>
+            </div>
+        </div>
+
+        <div class="px-6 py-20 bg-[#0a0a0a]">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-black text-white mb-4">감사한 고객 후기</h3>
+                <p class="text-gray-400 font-bold">실제 이용 고객님들의 생생한 리뷰입니다.</p>
+            </div>
+
+            <div class="flex flex-col gap-6">
+                <div class="bg-frame p-1.5 rounded-xl shadow-xl w-full max-w-2xl mx-auto">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left">
+                        <div class="font-black text-lg text-white mb-2">"집 앞까지 정해진 시간에 딱 맞춰서 오시네요."</div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-sm text-gray-400 font-bold">김*성 고객님</span>
+                            <span class="text-yellow-400 text-xs">★★★★★</span>
+                        </div>
+                        <p class="text-gray-300 text-sm leading-relaxed break-keep">렌터카 지점까지 무거운 짐을 들고 찾아갈 필요 없이, 집 주차장에서 차를 받고 바로 출발할 수 있어서 시간 절약이 엄청납니다. 차 상태도 너무 깔끔해서 만족했어요.</p>
+                    </div>
+                </div>
+                <div class="bg-frame p-1.5 rounded-xl shadow-xl w-full max-w-2xl mx-auto">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left">
+                        <div class="font-black text-lg text-white mb-2">"차량 퀄리티가 정말 새 차 같습니다."</div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-sm text-gray-400 font-bold">이*진 고객님</span>
+                            <span class="text-yellow-400 text-xs">★★★★★</span>
+                        </div>
+                        <p class="text-gray-300 text-sm leading-relaxed break-keep">담배 냄새 같은 불쾌한 냄새가 전혀 안 나고 실내 세차가 완벽하게 되어 있었습니다. 반납할 때도 딜리버리 기사님이 너무 친절하셔서 다음에도 무조건 여기서 빌릴 예정입니다.</p>
+                    </div>
+                </div>
+                <div class="bg-frame p-1.5 rounded-xl shadow-xl w-full max-w-2xl mx-auto">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left">
+                        <div class="font-black text-lg text-white mb-2">"예약 절차가 너무 간편해서 놀랐어요."</div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-sm text-gray-400 font-bold">박*우 고객님</span>
+                            <span class="text-yellow-400 text-xs">★★★★★</span>
+                        </div>
+                        <p class="text-gray-300 text-sm leading-relaxed break-keep">다른 곳들은 가입하고 뭐 인증하고 너무 복잡한데, 여기는 핸드폰 번호로 빠르게 로그인하고 꼭 필요한 정보만 넣으면 바로 예약이 확정돼서 스트레스가 없습니다.</p>
+                    </div>
+                </div>
+                <div class="bg-frame p-1.5 rounded-xl shadow-xl w-full max-w-2xl mx-auto">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left">
+                        <div class="font-black text-lg text-white mb-2">"기념일 데이트로 대형 세단 완벽했습니다."</div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-sm text-gray-400 font-bold">최*민 고객님</span>
+                            <span class="text-yellow-400 text-xs">★★★★★</span>
+                        </div>
+                        <p class="text-gray-300 text-sm leading-relaxed break-keep">특별한 날이라 G80을 렌트했는데, 차가 너무 고급스럽고 딜리버리 시간도 칼같이 지켜주셔서 데이트 내내 기분이 좋았네요. 중요한 일정에 강력 추천합니다.</p>
+                    </div>
+                </div>
+                <div class="bg-frame p-1.5 rounded-xl shadow-xl w-full max-w-2xl mx-auto">
+                    <div class="bg-[#111] border border-gray-700 p-6 rounded-lg text-left">
+                        <div class="font-black text-lg text-white mb-2">"빠르고 깔끔한 인수 인계 과정"</div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-sm text-gray-400 font-bold">정*희 고객님</span>
+                            <span class="text-yellow-400 text-xs">★★★★★</span>
+                        </div>
+                        <p class="text-gray-300 text-sm leading-relaxed break-keep">탁송 기사님이 차량 외관이나 주유 상태를 꼼꼼하게 미리 다 체크해서 보여주시고, 설명도 핵심만 빠르게 해주셔서 아침 일찍 출발하는데 지연이 없었습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-20" id="apply-section">
+            <div class="text-center mb-10">
+                <h3 class="text-3xl md:text-4xl font-black text-white mb-4">신청 접수하기</h3>
+                <p class="text-base text-gray-400 font-bold break-keep">복잡한 절차 없이 빠르게 예약하세요.</p>
+            </div>
+
+            <div class="bg-frame p-2 md:p-3 rounded-xl shadow-2xl">
+                <div class="bg-[#0a0a0a] border border-gray-700 p-5 md:p-8 rounded-lg">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-gray-300 font-black mb-2">성함</label>
+                            <input type="text" id="input-name" class="input-base font-bold" placeholder="예) 홍길동">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 font-black mb-2">생년월일</label>
+                            <input type="text" id="input-birth" class="input-base font-bold tracking-widest" placeholder="예) 950101 (6자리 숫자)" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 font-black mb-2">연락처</label>
+                            <input type="tel" id="input-phone" class="input-base font-bold tracking-widest text-gray-400 bg-[#1a1a1a]" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 font-black mb-2">희망 차량 선택</label>
+                            <select id="input-car" class="input-base font-bold text-center cursor-pointer">
+                                <option value="" disabled selected>차량을 선택해주세요</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1">
+                                <label class="block text-gray-300 font-black mb-2">수령 일자</label>
+                                <input type="date" id="input-date" class="input-base font-bold text-center cursor-pointer text-white">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-gray-300 font-black mb-2">이용 기간</label>
+                                <select id="input-days" class="input-base font-bold text-center cursor-pointer">
+                                    <option value="1">1일 (24시간)</option>
+                                    <option value="2">2일 (48시간)</option>
+                                    <option value="3">3일 (72시간)</option>
+                                    <option value="4">4일 (96시간)</option>
+                                    <option value="5">5일 (120시간)</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-gray-300 font-black mb-2">수령 시간</label>
+                                <select id="input-time" class="input-base font-bold text-center cursor-pointer">
+                                    <option value="09:00">오전 09:00</option><option value="10:00">오전 10:00</option>
+                                    <option value="11:00">오전 11:00</option><option value="12:00">오후 12:00</option>
+                                    <option value="13:00">오후 13:00</option><option value="14:00">오후 14:00</option>
+                                    <option value="15:00">오후 15:00</option><option value="16:00">오후 16:00</option>
+                                    <option value="17:00">오후 17:00</option><option value="18:00">오후 18:00</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#111] p-5 rounded border border-gray-700 mt-8 shadow-lg">
+                            <p class="text-white font-black mb-4">이용 정책 및 유의 사항</p>
+                            <ul class="text-gray-400 text-sm font-bold space-y-3 break-keep">
+                                <li>■ 만 26세 이상, 면허 취득 1년 이상</li>
+                                <li>■ 반려동물 탑승 불가</li>
+                                <li>■ 외국인 렌트 가능 (신용카드 결제 및 국제면허증 보유자)</li>
+                                <li>■ 면책금 : 50만 원</li>
+                                <li>■ 보상범위 : 대물한도 1,000만 원, 자손 500만 원, 대인 무한(2인까지), 휴차료 별도 청구됨</li>
+                                <li>■ 환불 정책 : 3일 전 100% 환불, 2일 전 50% 환불, 당일 취소 환불 불가</li>
+                                <li>■ 차량 수령 및 반납 시간 : 오전 09시 ~ 오후 18시</li>
+                                <li>■ 반납 시간 3시간 초과 시 1일 치 추가 요금 발생</li>
+                                <li><span class="highlight-yellow font-black tracking-wide">■ 10km 이내 딜리버리 포함</span> (산간 지역 및 장거리 배차 시 현장 비용 추가 가능)</li>
+                                <li>■ 주유량 배차 및 반납 시 동일 눈금 (초과 주유비 환불 불가)</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-[#1a1a1a] p-4 rounded border border-gray-700 flex flex-col gap-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="input-consent" class="w-6 h-6 rounded bg-black border-gray-600 checked:bg-blue-600">
+                                <span class="text-gray-300 font-bold text-sm">장기렌트 관련 정보 수집 및 이용 동의 (필수)</span>
+                            </label>
+                            <p class="text-yellow-400 text-xs font-bold ml-9 tracking-wide">동의 시 결제 금액의 5%가 즉시 할인됩니다.</p>
+                        </div>
+
+                        <div class="border-t border-gray-700 pt-6 mt-4">
+                            <div class="flex justify-between items-end mb-4">
+                                <span class="text-gray-400 font-bold">최종 결제 금액 (차량 인수 시 현장 결제)</span>
+                                <div class="text-right">
+                                    <span id="display-selected-car" class="text-sm text-gray-400 block mb-1">차량 미선택</span>
+                                    <span id="display-final-price" class="text-3xl font-black text-white">0원</span>
+                                </div>
+                            </div>
+                            <button onclick="openConfirmModal()" class="w-full metallic-bg py-5 text-2xl font-black rounded text-black hover:brightness-110 shadow-lg transition-all">예약하기</button>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+
+        <footer class="py-12 px-6 text-center border-t border-gray-800 bg-black">
+            <h3 class="text-lg font-black text-gray-500 mb-2">프리미엄 렌터카 서비스 고객센터</h3>
+            <p class="text-3xl font-black text-white mb-2">1588-0000</p>
+            <p class="text-sm font-bold text-gray-500 mb-6">운영시간 : 평일 09:00 ~ 18:00 (주말 및 공휴일 휴무)</p>
+            <div class="text-xs font-bold text-gray-700 break-keep leading-loose">
+                상호명 : 프리미엄 렌터카 | 대표자 : 홍길동 | 사업자등록번호 : 123-45-67890<br>
+                주소 : 서울특별시 강남구 렌터카대로 123, 1층<br>
+                통신판매업신고 : 제2026-서울강남-0001호<br>
+                <span class="mt-4 block text-gray-800">Copyright © Premium Rentcar. All rights reserved.</span>
+            </div>
+        </footer>
+    </div>
+
+    <div id="view-mypage" class="hidden flex-1 p-4 md:p-6 pb-20">
+        <h2 class="text-2xl font-black text-white mb-6 pt-4">내 예약 내역</h2>
+        <div class="admin-table-wrapper rounded-lg border border-gray-700 bg-[#0a0a0a]">
+            <table class="w-full text-left text-sm text-gray-300 min-w-[800px]">
+                <thead class="bg-[#111] text-gray-400 font-black border-b border-gray-700">
+                    <tr><th class="p-4 w-32 border-r border-gray-800">신청일시</th><th class="p-4 w-28 border-r border-gray-800">상태</th><th class="p-4 border-r border-gray-800">차량 정보</th><th class="p-4 border-r border-gray-800">일정</th><th class="p-4">결제금액</th></tr>
+                </thead>
+                <tbody id="mypage-table-body"></tbody>
+            </table>
+            <div id="mypage-empty" class="hidden text-center text-gray-500 py-10 font-bold">예약 내역이 없습니다.</div>
+        </div>
+    </div>
+
+    <div id="view-admin" class="hidden flex-col flex-1 bg-[#050505] p-4 md:p-6 z-50">
+        <div class="flex justify-between items-center mb-6 pt-4">
+            <h2 class="text-2xl font-black text-white">관리자 대시보드</h2>
+            <div class="flex gap-2">
+                <button onclick="downloadExcel()" class="bg-green-800 text-white px-4 py-2 rounded font-bold text-sm hover:bg-green-700">엑셀 다운로드</button>
+                <button onclick="switchView('landing')" class="bg-gray-700 text-white px-4 py-2 rounded font-bold text-sm">나가기</button>
+            </div>
+        </div>
+        <div class="admin-table-wrapper rounded-lg border border-gray-700 bg-[#0a0a0a] shadow-2xl flex-1 mb-10">
+            <table class="w-full text-left text-sm min-w-[1000px]">
+                <thead class="bg-[#111] text-gray-400 font-black border-b border-gray-700">
+                    <tr>
+                        <th class="p-3 border-r border-gray-800 w-24 text-center">신청일시</th>
+                        <th class="p-3 border-r border-gray-800 w-32 text-center">상태관리</th>
+                        <th class="p-3 border-r border-gray-800 w-32 text-center">고객정보</th>
+                        <th class="p-3 border-r border-gray-800 w-36 text-center">연락처</th>
+                        <th class="p-3 border-r border-gray-800 text-center">이용 일정 (24H)</th>
+                        <th class="p-3 border-r border-gray-800 w-40 text-center">선택 차종</th>
+                        <th class="p-3 text-center w-28">관리 (수정/삭제)</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body"></tbody>
+            </table>
+            <div id="admin-empty" class="hidden text-center text-gray-500 py-20 font-bold">등록된 예약이 없습니다.</div>
+        </div>
+    </div>
+
+    <div id="msg-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
+        <div class="bg-frame p-2 rounded-xl shadow-2xl w-full max-w-sm">
+            <div class="bg-[#0a0a0a] p-6 rounded-lg text-center border border-gray-700">
+                <p id="msg-content" class="text-white font-bold mb-6 break-keep leading-relaxed"></p>
+                <button onclick="closeMsgModal()" class="w-full metallic-bg text-black font-black py-3 rounded hover:brightness-110">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-frame p-2 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+            <div class="bg-[#0a0a0a] border border-gray-700 rounded-lg flex flex-col h-full overflow-hidden">
+                <div class="p-4 border-b border-gray-800 text-center"><h3 class="text-xl font-black text-white">접수 내역 확인</h3></div>
+                <div class="p-5 overflow-y-auto" id="confirm-details"></div>
+                <div class="p-4 border-t border-gray-800 flex gap-3">
+                    <button onclick="closeConfirmModal()" class="flex-1 bg-[#222] text-white py-4 font-bold rounded hover:bg-gray-800">수정하기</button>
+                    <button onclick="submitApplication()" class="flex-1 metallic-bg text-black py-4 font-black rounded shadow-lg hover:brightness-110">예약 확정</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pw-modal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
+        <div class="bg-frame p-2 rounded-xl w-full max-w-sm shadow-2xl">
+            <div class="bg-[#0a0a0a] border border-gray-700 p-6 rounded-lg text-center">
+                <h3 class="text-white font-black text-lg mb-4">관리자 접속</h3>
+                <input type="password" id="admin-pw-input" class="input-base text-center mb-4" placeholder="비밀번호 입력">
+                <div class="flex gap-2">
+                    <button onclick="closePwModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded">취소</button>
+                    <button onclick="checkAdminPw()" class="flex-1 metallic-bg text-black py-3 font-black rounded hover:brightness-110">접속</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-edit-modal" class="hidden fixed inset-0 bg-black/95 z-[110] flex items-center justify-center p-4">
+        <div class="bg-frame p-2 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="bg-[#0a0a0a] border border-gray-700 p-5 rounded-lg text-left">
+                <h3 class="text-white font-black text-xl mb-4 text-center">예약 정보 전체 수정</h3>
+                <div class="space-y-4">
+                    <input type="hidden" id="edit-id">
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-gray-400 font-bold text-sm mb-1">성함</label>
+                            <input type="text" id="edit-name" class="input-base text-sm py-2 px-3">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-gray-400 font-bold text-sm mb-1">생년월일</label>
+                            <input type="text" id="edit-birth" class="input-base text-sm py-2 px-3 tracking-widest" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-bold text-sm mb-1">연락처</label>
+                        <input type="tel" id="edit-phone" class="input-base text-sm py-2 px-3 tracking-widest" oninput="autoHyphenPhone(this)" maxlength="13">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-bold text-sm mb-1">차종</label>
+                        <select id="edit-car" class="input-base text-sm py-2 px-3"></select>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-gray-400 font-bold text-sm mb-1">수령 일자</label>
+                            <input type="date" id="edit-date" class="input-base text-sm py-2 px-2 text-center text-white">
+                        </div>
+                        <div class="w-20">
+                            <label class="block text-gray-400 font-bold text-sm mb-1">일수</label>
+                            <select id="edit-days" class="input-base text-sm py-2 px-2 text-center">
+                                <option value="1">1일</option><option value="2">2일</option>
+                                <option value="3">3일</option><option value="4">4일</option><option value="5">5일</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-gray-400 font-bold text-sm mb-1">수령 시간</label>
+                            <select id="edit-time" class="input-base text-sm py-2 px-2 text-center">
+                                <option value="09:00">09:00</option><option value="10:00">10:00</option>
+                                <option value="11:00">11:00</option><option value="12:00">12:00</option>
+                                <option value="13:00">13:00</option><option value="14:00">14:00</option>
+                                <option value="15:00">15:00</option><option value="16:00">16:00</option>
+                                <option value="17:00">17:00</option><option value="18:00">18:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="closeAdminEditModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded">취소</button>
+                    <button onclick="saveAdminEdit()" class="flex-1 metallic-bg text-black py-3 font-black rounded hover:brightness-110">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    // 1. Firebase 라이브러리 임포트
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 2. 파이어베이스 Config 설정 (여기에 발급받은 키값을 붙여넣으세요)
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'premium-rentcar';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 파이어베이스 DB 컬렉션 래퍼런스 (퍼블릭 데이터 영역)
+    const reservationsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'reservations');
+    const usersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', event => {
+        if (event.keyCode === 123 || (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74)) || (event.ctrlKey && event.keyCode === 85)) { 
+            event.preventDefault(); return false;
+        }
+    });
+
+    const carData = [
+        { id: 1, type: '중형', models: '쏘나타', price: 85000, img: 'https://i.postimg.cc/VLCgxZM9/Professional-studio-photograph-of-a-modern-Hyundai-1790128142951.png' },
+        { id: 2, type: '중형', models: 'K5', price: 85000, img: 'https://i.postimg.cc/28ZGs9vn/Professional-studio-photograph-of-a-modern-Kia-K5-1790128145976.png' },
+        { id: 3, type: '준대형', models: '그랜저', price: 150000, img: 'https://i.postimg.cc/pXFCwc8j/Professional-studio-photograph-of-a-modern-Hyundai-1790128149468.png' },
+        { id: 4, type: '준대형', models: 'K8', price: 150000, img: 'https://i.postimg.cc/m2HjvpMF/Professional-studio-photograph-of-a-modern-Kia-K8-1790128152160.png' },
+        { id: 5, type: '대형', models: 'G80', price: 250000, img: 'https://i.postimg.cc/X7CLR1FB/Professional-studio-photograph-of-a-modern-Genesis-1790128155577.png' },
+        { id: 6, type: '중형', models: '투싼', price: 100000, img: 'https://i.postimg.cc/65vckbR2/Professional-studio-photograph-of-a-modern-Hyundai-1790128158221.png' },
+        { id: 7, type: '중형', models: '스포티지', price: 100000, img: 'https://i.postimg.cc/VLCgxZMd/Professional-studio-photograph-of-a-modern-Kia-Spo-1790128161361.png' },
+        { id: 8, type: '준대형', models: '싼타페', price: 150000, img: 'https://i.postimg.cc/CLq73rDd/Professional-studio-photograph-of-a-modern-Hyundai-1790128164038.png' },
+        { id: 9, type: '준대형', models: '쏘렌토', price: 150000, img: 'https://i.postimg.cc/wTm2C4JB/Professional-studio-photograph-of-a-modern-Kia-Sor-1790128167277.png' },
+        { id: 10, type: '준대형', models: 'QM6', price: 150000, img: 'https://i.postimg.cc/GhyKWgYm/Professional-studio-photograph-of-a-modern-Renault-1790128169355.png' },
+        { id: 11, type: '대형', models: '팰리세이드 3.8', price: 250000, img: 'https://i.postimg.cc/qBYQZHth/Professional-studio-photograph-of-a-modern-Hyundai-1790128173211.png' },
+        { id: 12, type: '대형', models: 'GV80', price: 250000, img: 'https://i.postimg.cc/053ZH16K/Professional-studio-photograph-of-a-modern-Genesis-1790128175787.png' },
+        { id: 13, type: '승합', models: '스타렉스 9인승', price: 170000, img: 'https://i.postimg.cc/T2SQHvyW/Professional-studio-photograph-of-a-modern-Hyundai-1790128179398.png' },
+        { id: 14, type: '승합', models: '카니발 9인승', price: 170000, img: 'https://i.postimg.cc/XNhxD6ZZ/Professional-studio-photograph-of-a-modern-Kia-Car-1790128182891.png' }
+    ];
+
+    let memoryDatabase = []; 
+    let usersDB = [];
+    let currentApplicationData = null;
+    let currentUserPhone = null;
+
+    let adminTapCount = 0;
+    let adminTapTimeout;
+
+    window.handleAdminTap = function() {
+        adminTapCount++;
+        clearTimeout(adminTapTimeout);
+        adminTapTimeout = setTimeout(() => { adminTapCount = 0; }, 2000);
+        if (adminTapCount >= 5) { adminTapCount = 0; promptAdmin(); }
+    };
+
+    function calculateReturnDate(dateStr, timeStr, days) {
+        const [year, month, day] = dateStr.split('-');
+        const pickupText = `${year}-${month}-${day}`; 
+        
+        const returnDateObj = new Date(year, month - 1, day);
+        returnDateObj.setDate(returnDateObj.getDate() + parseInt(days)); 
+        
+        const rYear = returnDateObj.getFullYear();
+        const rMonth = String(returnDateObj.getMonth() + 1).padStart(2, '0');
+        const rDay = String(returnDateObj.getDate()).padStart(2, '0');
+        const returnText = `${rYear}년 ${rMonth}월 ${rDay}일`;
+        
+        return { pickupText, returnText, timeStr };
+    }
+
+    window.autoHyphenPhone = function(target) {
+        let str = target.value.replace(/[^0-9]/g, '');
+        if(str.length < 4) target.value = str;
+        else if(str.length < 7) target.value = str.substr(0, 3) + '-' + str.substr(3);
+        else if(str.length < 11) target.value = str.substr(0, 3) + '-' + str.substr(3, 3) + '-' + str.substr(6);
+        else target.value = str.substr(0, 3) + '-' + str.substr(3, 4) + '-' + str.substr(7);
+    };
+
+    window.checkUserExists = function(target) {
+        autoHyphenPhone(target);
+        let phone = target.value;
+        const confirmContainer = document.getElementById('pw-confirm-container');
+        const pwInput = document.getElementById('login-pw');
+        
+        if (phone.length === 13) {
+            let exists = usersDB.find(u => u.phone === phone);
+            if (exists) {
+                confirmContainer.style.display = 'none'; 
+                pwInput.placeholder = "비밀번호입력"; 
+            } else {
+                confirmContainer.style.display = 'block'; 
+                pwInput.placeholder = "간단비밀번호설정";
+            }
+            pwInput.focus();
+        } else {
+            confirmContainer.style.display = 'block';
+            pwInput.placeholder = "간단비밀번호설정";
+        }
+    };
+
+    window.handleLogin = async function() {
+        const phone = document.getElementById('login-phone').value.trim();
+        const pw = document.getElementById('login-pw').value.trim();
+        const pwConfirm = document.getElementById('login-pw-confirm').value.trim();
+
+        if (phone.length < 12) return showMsg("올바른 핸드폰 번호를 입력해주세요.");
+        if (!pw) return showMsg("비밀번호를 입력해주세요.");
+
+        let existingUser = usersDB.find(u => u.phone === phone);
+        if (existingUser) {
+            if (existingUser.password !== pw) return showMsg("비밀번호가 일치하지 않습니다.");
+        } else {
+            if (pw !== pwConfirm) return showMsg("입력하신 두 비밀번호가 일치하지 않습니다.<br>다시 확인해주세요.");
+            
+            // Firebase 새 유저 등록 (Firestore)
+            const newUserDoc = doc(usersCollection);
+            await setDoc(newUserDoc, { phone, password: pw });
+        }
+        
+        currentUserPhone = phone;
+        document.getElementById('input-phone').value = currentUserPhone; 
+        switchView('landing'); 
+    };
+
+    window.logout = function() {
+        currentUserPhone = null;
+        document.getElementById('login-phone').value = '';
+        document.getElementById('login-pw').value = '';
+        document.getElementById('login-pw-confirm').value = '';
+        document.getElementById('pw-confirm-container').style.display = 'block';
+        document.getElementById('login-pw').placeholder = "간단비밀번호설정";
+        toggleSideMenu();
+        switchView('login');
+    };
+
+    window.switchView = function(viewName) {
+        document.getElementById('view-login').style.display = 'none';
+        document.getElementById('view-landing').style.display = 'none';
+        document.getElementById('view-mypage').style.display = 'none';
+        document.getElementById('view-admin').style.display = 'none';
+        
+        const header = document.getElementById('global-header');
+        header.style.display = 'none';
+        document.getElementById('app-container').scrollTop = 0;
+
+        if (viewName === 'login') {
+            document.getElementById('view-login').style.display = 'flex';
+        } else if (viewName === 'landing') {
+            document.getElementById('view-landing').style.display = 'block';
+            header.style.display = 'flex';
+        } else if (viewName === 'mypage') {
+            document.getElementById('view-mypage').style.display = 'block';
+            header.style.display = 'flex';
+            loadMyPageData();
+        } else if (viewName === 'admin') {
+            document.getElementById('view-admin').style.display = 'flex';
+            loadAdminData();
+        }
+    };
+
+    window.toggleSideMenu = function() {
+        const menu = document.getElementById('side-menu');
+        menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    };
+
+    window.goToMyPage = function() { toggleSideMenu(); switchView('mypage'); };
+    window.showMsg = function(msg) { document.getElementById('msg-content').innerHTML = msg; document.getElementById('msg-modal').style.display = 'flex'; };
+    window.closeMsgModal = function() { document.getElementById('msg-modal').style.display = 'none'; };
+
+    window.updateDynamicPrice = function() {
+        const carId = document.getElementById('input-car').value;
+        const consent = document.getElementById('input-consent').checked;
+        const days = parseInt(document.getElementById('input-days').value) || 1;
+        const carDisplay = document.getElementById('display-selected-car');
+        const priceDisplay = document.getElementById('display-final-price');
+
+        if (!carId) { carDisplay.innerText = "차량 미선택"; priceDisplay.innerText = "0원"; return; }
+
+        const selectedCar = carData.find(c => c.id == carId);
+        let finalPrice = selectedCar.price * days;
+        if (consent) finalPrice = Math.floor(finalPrice * 0.95);
+
+        carDisplay.innerHTML = `<span class="text-gray-400 block">${selectedCar.type} (${days}일 이용)</span><span class="font-bold text-white">${selectedCar.models}</span>`;
+        priceDisplay.innerText = `${finalPrice.toLocaleString()}원`;
+    };
+
+    window.openConfirmModal = function() {
+        if(!currentUserPhone) return showMsg("로그인이 필요합니다.");
+
+        const name = document.getElementById('input-name').value.trim();
+        const birth = document.getElementById('input-birth').value.trim();
+        const phone = document.getElementById('input-phone').value.trim();
+        const carId = document.getElementById('input-car').value;
+        const date = document.getElementById('input-date').value;
+        const time = document.getElementById('input-time').value;
+        const days = document.getElementById('input-days').value;
+        const consent = document.getElementById('input-consent').checked;
+
+        if (!name) return showMsg("성함을 입력해주세요.");
+        if (!birth || birth.length !== 6) return showMsg("생년월일 6자리를 올바르게 입력해주세요.");
+        if (!carId) return showMsg("차량을 선택해주세요.");
+        if (!date) return showMsg("수령 일자를 선택해주세요.");
+        if (!consent) return showMsg("필수 동의 항목을 체크해주세요.");
+
+        const selectedCar = carData.find(c => c.id == carId);
+        let finalPrice = selectedCar.price * days;
+        if(consent) finalPrice = Math.floor(finalPrice * 0.95); 
+
+        const { pickupText, returnText, timeStr } = calculateReturnDate(date, time, days);
+
+        currentApplicationData = {
+            id: Date.now().toString(),
+            userPhone: currentUserPhone, 
+            status: '신청완료',
+            name, birth, phone, carId: selectedCar.id, carType: selectedCar.type, carModels: selectedCar.models,
+            date, time, days, returnDateText: returnText, consent, price: finalPrice,
+            createdAt: new Date().getTime()
+        };
+
+        const detailsHtml = `
+            <div class="flex justify-between border-b border-gray-700 py-3 items-center">
+                <span class="text-gray-400 font-bold">성함 / 연락처</span><span class="text-white font-black text-right">${name} (${birth}) <br> ${phone}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-3 items-center">
+                <span class="text-gray-400 font-bold">선택 차량</span>
+                <span class="text-right text-white font-black">${selectedCar.type} <br>${selectedCar.models}</span>
+            </div>
+            <div class="flex flex-col border-b border-gray-700 py-4 gap-2">
+                <span class="text-gray-300 font-black">이용 일정 <span class="text-sm text-gray-500">(${days}일 / ${days * 24}시간)</span></span>
+                <div class="bg-[#111] p-3 rounded flex justify-between">
+                    <span class="text-blue-400 font-bold">인수</span><span class="text-right text-sm text-gray-300">${pickupText} <b class="text-white">${timeStr}</b></span>
+                </div>
+                <div class="bg-[#111] p-3 rounded flex justify-between">
+                    <span class="text-red-400 font-bold">반납</span><span class="text-right text-sm text-gray-300">${returnText} <b class="text-white">${timeStr}</b></span>
+                </div>
+            </div>
+            <div class="flex justify-between items-center pt-5">
+                <span class="text-gray-400 font-bold text-lg">결제 금액 <span class="text-xs text-yellow-400 block mt-1">5% 할인 적용됨</span></span>
+                <span class="text-yellow-400 font-black text-3xl">${finalPrice.toLocaleString()}원</span>
+            </div>
+        `;
+        document.getElementById('confirm-details').innerHTML = detailsHtml;
+        document.getElementById('confirm-modal').style.display = 'flex';
+    };
+
+    window.closeConfirmModal = function() { document.getElementById('confirm-modal').style.display = 'none'; };
+
+    window.submitApplication = async function() {
+        if (!currentApplicationData) return;
+        
+        // 파이어베이스 DB에 예약 정보 전송
+        const newDocRef = doc(reservationsCollection);
+        await setDoc(newDocRef, currentApplicationData);
+
+        closeConfirmModal();
+        showMsg("예약 신청이 완료되었습니다.<br>빠른 시일 내에 연락드리겠습니다.");
+        
+        document.getElementById('input-name').value = '';
+        document.getElementById('input-birth').value = '';
+        document.getElementById('input-car').value = '';
+        document.getElementById('input-date').value = '';
+        document.getElementById('input-consent').checked = false;
+        updateDynamicPrice();
+    };
+
+    window.loadMyPageData = function() {
+        const tbody = document.getElementById('mypage-table-body');
+        const emptyState = document.getElementById('mypage-empty');
+        tbody.innerHTML = '';
+        
+        const myData = memoryDatabase.filter(r => r.userPhone === currentUserPhone).sort((a, b) => b.createdAt - a.createdAt);
+
+        if (myData.length === 0) { emptyState.style.display = 'block'; return; }
+        emptyState.style.display = 'none';
+
+        myData.forEach(record => {
+            const d = new Date(record.createdAt);
+            const reqDate = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            let badge = `<span class="text-blue-400 font-black">${record.status}</span>`;
+            if (record.status === '취소') badge = `<span class="text-red-500 font-black">${record.status}</span>`;
+            if (record.status === '이용완료') badge = `<span class="text-gray-500 font-black">${record.status}</span>`;
+
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-gray-800 hover:bg-[#1a1a1a]";
+            tr.innerHTML = `
+                <td class="p-4 border-r border-gray-800 whitespace-nowrap">${reqDate}</td>
+                <td class="p-4 border-r border-gray-800">${badge}</td>
+                <td class="p-4 border-r border-gray-800 font-black">${record.carModels}</td>
+                <td class="p-4 border-r border-gray-800 text-xs whitespace-nowrap">
+                    <span class="text-blue-400">인수:</span> ${record.date} ${record.time}<br>
+                    <span class="text-red-400">반납:</span> ${record.returnDateText} ${record.time}
+                </td>
+                <td class="p-4 font-black text-yellow-400 whitespace-nowrap">${record.price.toLocaleString()}원</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    };
+
+    window.promptAdmin = function() { document.getElementById('admin-pw-input').value = ''; document.getElementById('pw-modal').style.display = 'flex'; };
+    window.closePwModal = function() { document.getElementById('pw-modal').style.display = 'none'; };
+    window.checkAdminPw = function() {
+        if (btoa(document.getElementById('admin-pw-input').value) === 'MjYwOTE3') { closePwModal(); switchView('admin'); } 
+        else { showMsg('비밀번호가 일치하지 않습니다.'); }
+    };
+
+    window.changeRecordStatus = async function(recordId, selectElement) {
+        const newStatus = selectElement.value;
+        const record = memoryDatabase.find(r => r.id === recordId);
+        if (record && record.docId) {
+            
+            let cClass = "border-gray-600 text-white";
+            if (newStatus === '신청완료') cClass = "border-blue-500 text-blue-400";
+            if (newStatus === '배차준비') cClass = "border-yellow-500 text-yellow-400";
+            if (newStatus === '배차완료') cClass = "border-green-500 text-green-400";
+            if (newStatus === '이용중') cClass = "border-purple-500 text-purple-400";
+            if (newStatus === '이용완료') cClass = "border-gray-600 text-gray-500";
+            if (newStatus === '취소') cClass = "border-red-500 text-red-500";
+
+            selectElement.className = `bg-[#111] border p-1.5 rounded font-black outline-none ${cClass} cursor-pointer transition-colors`;
+            
+            // 파이어베이스 데이터베이스 업데이트 (실시간)
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
+            await updateDoc(docRef, { status: newStatus });
+        }
+    };
+
+    window.deleteRecord = async function(id) {
+        if(confirm("해당 예약 내역을 영구적으로 삭제하시겠습니까?")) {
+            const record = memoryDatabase.find(r => r.id === id);
+            if (record && record.docId) {
+                // 파이어베이스 DB에서 완전히 삭제
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
+                await deleteDoc(docRef);
+            }
+        }
+    };
+
+    window.editRecord = function(id) {
+        const record = memoryDatabase.find(r => r.id === id);
+        if(!record) return;
+
+        document.getElementById('edit-id').value = record.id;
+        document.getElementById('edit-name').value = record.name;
+        document.getElementById('edit-birth').value = record.birth || '';
+        document.getElementById('edit-phone').value = record.phone;
+        document.getElementById('edit-car').value = record.carId;
+        document.getElementById('edit-date').value = record.date;
+        document.getElementById('edit-days').value = record.days || 1;
+        document.getElementById('edit-time').value = record.time;
+        
+        document.getElementById('admin-edit-modal').style.display = 'flex';
+    };
+
+    window.closeAdminEditModal = function() { document.getElementById('admin-edit-modal').style.display = 'none'; };
+
+    window.saveAdminEdit = async function() {
+        const id = document.getElementById('edit-id').value;
+        const name = document.getElementById('edit-name').value.trim();
+        const birth = document.getElementById('edit-birth').value.trim();
+        const phone = document.getElementById('edit-phone').value.trim();
+        const carId = document.getElementById('edit-car').value;
+        const date = document.getElementById('edit-date').value;
+        const days = document.getElementById('edit-days').value;
+        const time = document.getElementById('edit-time').value;
+
+        if(!name || !phone || !date || !birth) return showMsg('수정하실 빈 칸을 모두 채워주세요.');
+
+        const record = memoryDatabase.find(r => r.id === id);
+        if(record && record.docId) {
+            const selectedCar = carData.find(c => c.id == carId);
+            const { pickupText, returnText, timeStr } = calculateReturnDate(date, time, days);
+            let finalPrice = selectedCar.price * days;
+            if(record.consent) finalPrice = Math.floor(finalPrice * 0.95);
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
+            
+            // 파이어베이스 정보 수정 업데이트
+            await updateDoc(docRef, {
+                name, birth, phone, carId: selectedCar.id, carType: selectedCar.type, carModels: selectedCar.models,
+                date, days, time, returnDateText: returnText, price: finalPrice
+            });
+
+            closeAdminEditModal();
+        }
+    };
+
+    window.loadAdminData = function() {
+        const tbody = document.getElementById('admin-table-body');
+        const emptyState = document.getElementById('admin-empty');
+        tbody.innerHTML = '';
+        
+        const sorted = [...memoryDatabase].sort((a, b) => b.createdAt - a.createdAt);
+        if (sorted.length === 0) { emptyState.style.display = 'block'; return; }
+        emptyState.style.display = 'none';
+
+        sorted.forEach(record => {
+            const d = new Date(record.createdAt);
+            const req = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            
+            let rClass = record.status === '이용완료' || record.status === '취소' ? "border-b border-gray-800 text-gray-600 bg-[#050505]" : "border-b border-gray-800 text-white hover:bg-[#1a1a1a]";
+            let cClass = "border-gray-600 text-white";
+            if (record.status === '신청완료') cClass = "border-blue-500 text-blue-400";
+            if (record.status === '배차준비') cClass = "border-yellow-500 text-yellow-400";
+            if (record.status === '배차완료') cClass = "border-green-500 text-green-400";
+            if (record.status === '이용중') cClass = "border-purple-500 text-purple-400";
+            if (record.status === '이용완료') cClass = "border-gray-600 text-gray-500";
+            if (record.status === '취소') cClass = "border-red-500 text-red-500";
+
+            const selHtml = `<select class="bg-[#111] border p-1.5 rounded font-black outline-none ${cClass} cursor-pointer transition-colors" onchange="changeRecordStatus('${record.id}', this)">
+                <option value="신청완료" ${record.status==='신청완료'?'selected':''}>신청완료</option>
+                <option value="배차준비" ${record.status==='배차준비'?'selected':''}>배차준비</option>
+                <option value="배차완료" ${record.status==='배차완료'?'selected':''}>배차완료</option>
+                <option value="이용중" ${record.status==='이용중'?'selected':''}>이용중</option>
+                <option value="이용완료" ${record.status==='이용완료'?'selected':''}>이용완료</option>
+                <option value="취소" ${record.status==='취소'?'selected':''}>취소</option>
+            </select>`;
+
+            const tr = document.createElement('tr');
+            tr.id = `row-${record.id}`; tr.className = rClass;
+            tr.innerHTML = `
+                <td class="p-3 border-r border-gray-800 whitespace-nowrap text-center">${req}</td>
+                <td class="p-3 border-r border-gray-800 text-center">${selHtml}</td>
+                <td class="p-3 border-r border-gray-800 font-black whitespace-nowrap text-center">
+                    ${record.name}<br><span class="text-xs text-gray-500 font-bold">${record.birth || '-'}</span>
+                </td>
+                <td class="p-3 border-r border-gray-800 font-bold whitespace-nowrap tracking-wider text-center">${record.phone}</td>
+                <td class="p-3 border-r border-gray-800 text-xs whitespace-nowrap text-center">
+                    <span class="text-blue-400 font-bold">인수:</span> ${record.date} 오전 ${record.time} <span class="text-gray-500">(${record.days || 1}일)</span><br>
+                    <span class="text-red-400 font-bold">반납:</span> ${record.returnDateText} 오전 ${record.time}
+                </td>
+                <td class="p-3 border-r border-gray-800 font-black whitespace-nowrap text-center">
+                    <span class="text-[10px] text-gray-500 block">${record.carType}</span>${record.carModels}
+                </td>
+                <td class="p-3 flex gap-1 justify-center min-w-[100px]">
+                    <button onclick="editRecord('${record.id}')" class="bg-blue-900 text-white px-3 py-2 rounded text-xs font-bold hover:bg-blue-800 transition-colors">수정</button>
+                    <button onclick="deleteRecord('${record.id}')" class="bg-red-900 text-white px-3 py-2 rounded text-xs font-bold hover:bg-red-800 transition-colors">삭제</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    };
+
+    window.downloadExcel = function() {
+        if (memoryDatabase.length === 0) return showMsg("다운로드할 데이터가 없습니다.");
+        let csv = "\uFEFF고객계정,신청일시,상태,성함,생년월일,연락처,수령일자,시간,이용일수,차종,차량모델,결제금액\n";
+        const sorted = [...memoryDatabase].sort((a, b) => b.createdAt - a.createdAt);
+        sorted.forEach(r => {
+            const d = new Date(r.createdAt);
+            const req = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
+            csv += `${r.userPhone},${req},${r.status},${r.name},${r.birth || ''},${r.phone},${r.date},${r.time},${r.days}일,${r.carType},${r.carModels},${r.price}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "프리미엄렌터카_예약내역.csv";
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    };
+
+    window.onload = async function() {
+        const carListContainer = document.getElementById('car-list-container');
+        const carSelect = document.getElementById('input-car');
+        const editCarSelect = document.getElementById('edit-car');
+
+        carData.forEach((car) => {
+            const card = document.createElement('div');
+            card.className = "flex bg-[#111] border border-gray-700 rounded-lg overflow-hidden shadow-xl";
+            card.innerHTML = `
+                <div class="w-1/3 bg-[#0a0a0a] border-r border-gray-800 p-2 flex items-center justify-center">
+                    <img src="${car.img}" alt="${car.models}" class="w-full h-auto object-contain rounded">
+                </div>
+                <div class="w-2/3 p-4 flex flex-col justify-center text-left">
+                    <div class="mb-1"><span class="bg-neutral-800 border border-gray-600 text-gray-300 font-bold text-[10px] px-2 py-0.5 rounded-sm">${car.type}</span></div>
+                    <div class="text-white font-black text-2xl mb-1">${car.models}</div>
+                    <div class="text-yellow-400 font-black text-lg">${(car.price / 10000)}만 원 <span class="text-gray-500 font-bold text-xs">/ 1일</span></div>
+                </div>
+            `;
+            carListContainer.appendChild(card);
+
+            const option = document.createElement('option');
+            option.value = car.id; option.text = `[${car.type}] ${car.models} - ${(car.price / 10000)}만 원`;
+            carSelect.appendChild(option);
+
+            const editOption = document.createElement('option');
+            editOption.value = car.id; editOption.text = `[${car.type}] ${car.models}`;
+            editCarSelect.appendChild(editOption);
+        });
+
+        document.getElementById('input-car').addEventListener('change', updateDynamicPrice);
+        document.getElementById('input-days').addEventListener('change', updateDynamicPrice); 
+        document.getElementById('input-consent').addEventListener('change', updateDynamicPrice);
+
+        const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
+        document.getElementById('input-date').setAttribute('min', localISOTime);
+        
+        switchView('login'); 
+
+        // 파이어베이스 초기 익명 로그인 및 실시간 동기화 시작
+        try {
+            if (typeof __initial_auth_token !== 'undefined') {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            // 사용자 데이터베이스 실시간 구독 (새로고침 없이 동기화)
+            onSnapshot(usersCollection, (snapshot) => {
+                usersDB = [];
+                snapshot.forEach(doc => usersDB.push({ docId: doc.id, ...doc.data() }));
+            }, (error) => console.error("Firebase Users Error:", error));
+
+            // 예약 데이터베이스 실시간 구독 (새로고침 없이 동기화)
+            onSnapshot(reservationsCollection, (snapshot) => {
+                memoryDatabase = [];
+                snapshot.forEach(doc => memoryDatabase.push({ docId: doc.id, ...doc.data() }));
+                
+                // 만약 현재 어드민이나 마이페이지 뷰를 보고있다면 즉시 화면 최신화 렌더링
+                if (document.getElementById('view-admin').style.display === 'flex') loadAdminData();
+                if (document.getElementById('view-mypage').style.display === 'block') loadMyPageData();
+            }, (error) => console.error("Firebase Reservations Error:", error));
+
+        } catch (err) {
+            console.error("Firebase Auth or DB initialization failed:", err);
+        }
+    };
+</script>
+
+</body>
+</html>
