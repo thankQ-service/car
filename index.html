@@ -358,12 +358,20 @@
                             </ul>
                         </div>
 
-                        <div class="bg-[#1a1a1a] p-4 rounded border border-gray-700 flex flex-col gap-2">
+                        <!-- 변경된 필수 및 선택 동의 영역 -->
+                        <div class="bg-[#1a1a1a] p-4 rounded border border-gray-700 flex flex-col gap-4 mt-2">
                             <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" id="input-consent" class="w-6 h-6 rounded bg-black border-gray-600 checked:bg-blue-600">
-                                <span class="text-gray-300 font-bold text-sm">장기렌트 관련 정보 수집 및 이용 동의 (필수)</span>
+                                <input type="checkbox" id="input-policy" class="w-6 h-6 rounded bg-black border-gray-600 checked:bg-blue-600">
+                                <span class="text-white font-bold text-sm">이용 정책 및 유의 사항 동의 <span class="text-red-400">(필수)</span></span>
                             </label>
-                            <p class="text-yellow-400 text-xs font-bold ml-9 tracking-wide">동의 시 결제 금액의 5%가 즉시 할인됩니다.</p>
+                            
+                            <div class="border-t border-gray-800 pt-4 flex flex-col gap-2">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" id="input-consent" class="w-6 h-6 rounded bg-black border-gray-600 checked:bg-blue-600">
+                                    <span class="text-gray-300 font-bold text-sm">장기렌트 관련 정보 수집 및 이용 동의 <span class="text-blue-400">(선택)</span></span>
+                                </label>
+                                <p class="text-yellow-400 text-xs font-bold ml-9 tracking-wide">선택 항목 동의 시 결제 금액의 5%가 즉시 할인됩니다.</p>
+                            </div>
                         </div>
 
                         <div class="border-t border-gray-700 pt-6 mt-4">
@@ -439,6 +447,20 @@
             <div class="bg-[#0a0a0a] p-6 rounded-lg text-center border border-gray-700">
                 <p id="msg-content" class="text-white font-bold mb-6 break-keep leading-relaxed"></p>
                 <button onclick="closeMsgModal()" class="w-full metallic-bg text-black font-black py-3 rounded hover:brightness-110">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 중복 예약 확인 모달 추가 -->
+    <div id="duplicate-modal" class="hidden fixed inset-0 bg-black/95 z-[105] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-frame p-2 rounded-xl shadow-2xl w-full max-w-sm">
+            <div class="bg-[#0a0a0a] border border-gray-700 p-6 rounded-lg text-center">
+                <p class="text-white font-black text-xl mb-2 break-keep">예약 내역 존재</p>
+                <p class="text-gray-400 text-sm font-bold mb-6 break-keep leading-relaxed">이미 동일한 정보로 등록된 예약 내역이 있습니다.<br>추가로 차량을 예약하시겠습니까?</p>
+                <div class="flex gap-2">
+                    <button onclick="closeDuplicateModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded hover:bg-gray-800 transition-colors">취소</button>
+                    <button onclick="proceedToConfirmModal()" class="flex-1 metallic-bg text-black py-3 font-black rounded shadow-lg hover:brightness-110 transition-colors">추가 예약하기</button>
+                </div>
             </div>
         </div>
     </div>
@@ -527,13 +549,12 @@
 </div>
 
 <script type="module">
-    // Firebase 최신 모듈 임포트 (isSupported 추가)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 고객님의 파이어베이스 설정값 (절대 변경 금지)
+    // 고객님의 파이어베이스 설정값 (변경 없이 사용 가능)
     const firebaseConfig = {
         apiKey: "AIzaSyCr4qXXfwIjxwyWILzBPi2SX_e7TLvAe8o",
         authDomain: "car-698fe.firebaseapp.com",
@@ -547,7 +568,6 @@
     const appId = 'premium-rentcar';
     const app = initializeApp(firebaseConfig);
     
-    // 애널리틱스는 충돌을 방지하기 위해 지원 환경에서만 안전하게 실행
     let analytics;
     isSupported().then(supported => {
         if (supported) { analytics = getAnalytics(app); }
@@ -636,7 +656,6 @@
                 confirmContainer.style.display = 'block'; 
                 pwInput.placeholder = "간단비밀번호설정";
             }
-            // 13자리가 꽉 차면 자동으로 비밀번호 칸으로 커서 이동
             pwInput.focus();
         } else {
             confirmContainer.style.display = 'block';
@@ -660,7 +679,6 @@
         } else {
             if (pw !== pwConfirm) return showMsg("입력하신 두 비밀번호가 일치하지 않습니다.<br>다시 확인해주세요.");
             
-            // Firebase 새 유저 등록
             const newUserDoc = doc(usersCollection);
             await setDoc(newUserDoc, { phone, password: pw, createdAt: new Date().getTime() });
         }
@@ -741,15 +759,39 @@
         const phone = document.getElementById('input-phone').value.trim();
         const carId = document.getElementById('input-car').value;
         const date = document.getElementById('input-date').value;
-        const time = document.getElementById('input-time').value;
-        const days = document.getElementById('input-days').value;
-        const consent = document.getElementById('input-consent').checked;
+        const policy = document.getElementById('input-policy').checked; 
 
         if (!name) return showMsg("성함을 입력해주세요.");
         if (!birth || birth.length !== 6) return showMsg("생년월일 6자리를 올바르게 입력해주세요.");
         if (!carId) return showMsg("차량을 선택해주세요.");
         if (!date) return showMsg("수령 일자를 선택해주세요.");
-        if (!consent) return showMsg("필수 동의 항목을 체크해주세요.");
+        if (!policy) return showMsg("이용 정책 및 유의 사항에 동의해주세요 (필수).");
+
+        // 중복 예약 확인 로직
+        const isDuplicate = memoryDatabase.some(r => r.name === name && r.phone === phone);
+        
+        if (isDuplicate) {
+            document.getElementById('duplicate-modal').style.display = 'flex';
+        } else {
+            proceedToConfirmModal();
+        }
+    };
+
+    window.closeDuplicateModal = function() {
+        document.getElementById('duplicate-modal').style.display = 'none';
+    };
+
+    window.proceedToConfirmModal = function() {
+        document.getElementById('duplicate-modal').style.display = 'none';
+
+        const name = document.getElementById('input-name').value.trim();
+        const birth = document.getElementById('input-birth').value.trim();
+        const phone = document.getElementById('input-phone').value.trim();
+        const carId = document.getElementById('input-car').value;
+        const date = document.getElementById('input-date').value;
+        const time = document.getElementById('input-time').value;
+        const days = document.getElementById('input-days').value;
+        const consent = document.getElementById('input-consent').checked; 
 
         const selectedCar = carData.find(c => c.id == carId);
         let finalPrice = selectedCar.price * days;
@@ -765,6 +807,8 @@
             date, time, days, returnDateText: returnText, consent, price: finalPrice,
             createdAt: new Date().getTime()
         };
+
+        const discountText = consent ? '<span class="text-xs text-yellow-400 block mt-1">선택 동의 5% 할인 적용됨</span>' : '';
 
         const detailsHtml = `
             <div class="flex justify-between border-b border-gray-700 py-3 items-center">
@@ -784,7 +828,7 @@
                 </div>
             </div>
             <div class="flex justify-between items-center pt-5">
-                <span class="text-gray-400 font-bold text-lg">결제 금액 <span class="text-xs text-yellow-400 block mt-1">5% 할인 적용됨</span></span>
+                <span class="text-gray-400 font-bold text-lg">결제 금액 <span class="text-xs text-blue-300 block mt-1">※ 차량 인수 시 현장결제</span>${discountText}</span>
                 <span class="text-yellow-400 font-black text-3xl">${finalPrice.toLocaleString()}원</span>
             </div>
         `;
@@ -797,7 +841,6 @@
     window.submitApplication = async function() {
         if (!currentApplicationData || !auth.currentUser) return;
         
-        // 파이어베이스 DB(Firestore)에 예약 정보 전송
         const newDocRef = doc(reservationsCollection);
         await setDoc(newDocRef, currentApplicationData);
 
@@ -808,6 +851,7 @@
         document.getElementById('input-birth').value = '';
         document.getElementById('input-car').value = '';
         document.getElementById('input-date').value = '';
+        document.getElementById('input-policy').checked = false;
         document.getElementById('input-consent').checked = false;
         updateDynamicPrice();
     };
@@ -1045,11 +1089,12 @@
         switchView('login'); 
 
         try {
-            // 테스트 환경의 토큰 충돌 에러(custom-token-mismatch) 무시
             try {
                 await signInAnonymously(auth);
             } catch (authError) {
-                console.warn("테스트 환경 익명 로그인 바이패스 (실 배포시 정상작동)", authError);
+                if(authError.code !== 'auth/custom-token-mismatch') {
+                    console.warn("Auth check:", authError);
+                }
             }
 
             onSnapshot(usersCollection, (snapshot) => {
