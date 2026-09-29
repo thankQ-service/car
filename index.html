@@ -25,7 +25,7 @@
         * { -ms-overflow-style: none; scrollbar-width: none; word-break: keep-all; }
         *::-webkit-scrollbar { display: none; }
 
-        /* 자동완성(Autofill) 시 브라우저 파란색 배경 강제 방지 (다크테마 유지) */
+        /* 브라우저 자동완성 파란 배경 방지 */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
@@ -42,9 +42,9 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .admin-table-wrapper::-webkit-scrollbar { display: block; height: 12px; }
+        .admin-table-wrapper::-webkit-scrollbar { display: block; height: 10px; }
         .admin-table-wrapper::-webkit-scrollbar-track { background: #111; border-radius: 0 0 8px 8px; }
-        .admin-table-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 8px; border: 3px solid #111; }
+        .admin-table-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 8px; border: 2px solid #111; }
         
         body {
             font-family: 'Pretendard', sans-serif;
@@ -56,7 +56,7 @@
             padding: 10px;
         }
 
-        /* 전체 금빛 테두리 적용 */
+        /* 전체 금빛 테두리 라인 */
         body::before {
             content: '';
             position: fixed;
@@ -109,7 +109,7 @@
 <div id="app-container" class="detail-container shadow-2xl flex flex-col border-x border-gray-900">
 
     <div id="global-header" class="hidden sticky top-0 w-full z-40 bg-black/90 backdrop-blur py-4 px-6 flex justify-between items-center border-b border-gray-800">
-        <!-- 5번 클릭 시 관리자 모드 진입 이스터에그 (커서는 일반 화살표 유지) -->
+        <!-- 관리자 모드 이스터에그 (커서 기본 유지) -->
         <h1 onclick="handleAdminTap()" class="text-white font-black text-xl tracking-tight cursor-default">프리미엄 렌터카</h1>
         <button onclick="toggleSideMenu()" class="text-white hover:text-gray-300 transition-colors p-2">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
@@ -127,7 +127,6 @@
                 <button onclick="switchView('landing'); toggleSideMenu();" class="text-left py-4 px-4 text-gray-300 font-bold text-lg hover:bg-[#222] rounded transition-colors">차량 신청하기</button>
             </div>
             <div class="p-4 border-t border-gray-800 flex flex-col gap-3">
-                <button onclick="promptAdmin(); toggleSideMenu();" class="w-full text-gray-700 text-xs text-right mb-2">admin mode</button>
                 <button onclick="logout()" class="w-full bg-red-900 text-white font-bold py-3 rounded hover:bg-red-800 transition-colors">로그아웃</button>
             </div>
         </div>
@@ -136,13 +135,11 @@
     <div id="view-login" class="flex flex-col flex-1 items-center justify-center p-6 z-50 py-32">
         <div class="bg-frame p-4 rounded-xl shadow-2xl w-full max-w-md">
             <div class="bg-[#0a0a0a] border border-gray-700 p-8 rounded-lg text-center">
-                <!-- 로그인 창에서도 이스터에그 허용 -->
                 <h1 onclick="handleAdminTap()" class="text-4xl font-black mb-2 tracking-tight text-white pb-2 cursor-default">프리미엄 렌터카</h1>
                 <p class="text-gray-400 font-bold mb-8 text-sm break-keep">서비스 이용을 위해 핸드폰 번호로 로그인 해주세요.</p>
                 
                 <div class="space-y-4">
-                    <!-- autocomplete 속성을 이용해 브라우저 자동완성 억제 -->
-                    <input type="tel" id="login-phone" autocomplete="off" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" onkeyup="if(window.event.keyCode===13){document.getElementById('login-pw').focus();}" maxlength="13">
+                    <input type="tel" id="login-phone" autocomplete="off" class="input-base text-center font-bold tracking-widest text-lg" placeholder="핸드폰 번호 입력" oninput="checkUserExists(this)" maxlength="13">
                     <input type="password" id="login-pw" autocomplete="new-password" class="input-base text-center font-bold text-lg" placeholder="간단비밀번호설정" onkeyup="if(window.event.keyCode===13){document.getElementById('login-pw-confirm').offsetParent === null ? handleLogin() : document.getElementById('login-pw-confirm').focus();}">
                     <div id="pw-confirm-container">
                         <input type="password" id="login-pw-confirm" autocomplete="new-password" class="input-base text-center font-bold text-lg" placeholder="비밀번호 확인" onkeyup="if(window.event.keyCode===13){handleLogin();}">
@@ -358,7 +355,7 @@
                             </ul>
                         </div>
 
-                        <!-- 변경된 필수 및 선택 동의 영역 -->
+                        <!-- 필수 및 선택 동의 -->
                         <div class="bg-[#1a1a1a] p-4 rounded border border-gray-700 flex flex-col gap-4 mt-2">
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" id="input-policy" class="w-6 h-6 rounded bg-black border-gray-600 checked:bg-blue-600">
@@ -376,7 +373,7 @@
 
                         <div class="border-t border-gray-700 pt-6 mt-4">
                             <div class="flex justify-between items-end mb-4">
-                                <span class="text-gray-400 font-bold">최종 결제 금액 (차량 인수 시 현장 결제)</span>
+                                <span class="text-gray-400 font-bold">최종 결제 금액</span>
                                 <div class="text-right">
                                     <span id="display-selected-car" class="text-sm text-gray-400 block mb-1">차량 미선택</span>
                                     <span id="display-final-price" class="text-3xl font-black text-white">0원</span>
@@ -415,7 +412,7 @@
         </div>
     </div>
 
-    <div id="view-admin" class="hidden flex-col flex-1 bg-[#050505] p-4 md:p-6 z-50">
+    <div id="view-admin" class="hidden flex-col flex-1 bg-[#050505] p-2 md:p-6 z-50">
         <div class="flex justify-between items-center mb-6 pt-4">
             <h2 class="text-2xl font-black text-white">관리자 대시보드</h2>
             <div class="flex gap-2">
@@ -423,17 +420,18 @@
                 <button onclick="switchView('landing')" class="bg-gray-700 text-white px-4 py-2 rounded font-bold text-sm">나가기</button>
             </div>
         </div>
-        <div class="admin-table-wrapper rounded-lg border border-gray-700 bg-[#0a0a0a] shadow-2xl flex-1 mb-10">
-            <table class="w-full text-left text-sm min-w-[1000px]">
-                <thead class="bg-[#111] text-gray-400 font-black border-b border-gray-700">
+        <!-- 가로 스크롤 제거를 위해 min-w 제거 및 여백 축소 -->
+        <div class="rounded-lg border border-gray-700 bg-[#0a0a0a] shadow-2xl flex-1 mb-10 overflow-hidden">
+            <table class="w-full text-left text-[11px] sm:text-sm">
+                <thead class="bg-[#111] text-gray-400 font-bold border-b border-gray-700">
                     <tr>
-                        <th class="p-3 border-r border-gray-800 w-24 text-center">신청일시</th>
-                        <th class="p-3 border-r border-gray-800 w-32 text-center">상태관리</th>
-                        <th class="p-3 border-r border-gray-800 w-32 text-center">고객정보</th>
-                        <th class="p-3 border-r border-gray-800 w-36 text-center">연락처</th>
-                        <th class="p-3 border-r border-gray-800 text-center">이용 일정 (24H)</th>
-                        <th class="p-3 border-r border-gray-800 w-40 text-center">선택 차종</th>
-                        <th class="p-3 text-center w-28">관리 (수정/삭제)</th>
+                        <th class="p-1 sm:p-2 border-r border-gray-800 text-center break-keep w-14 sm:w-20">신청일시</th>
+                        <th class="p-1 sm:p-2 border-r border-gray-800 text-center w-20 sm:w-24">상태관리</th>
+                        <th class="p-1 sm:p-2 border-r border-gray-800 text-center break-keep w-16 sm:w-24">고객정보</th>
+                        <th class="p-1 sm:p-2 border-r border-gray-800 text-center break-keep w-24 sm:w-32">연락처</th>
+                        <th class="p-1 sm:p-2 border-r border-gray-800 text-center hidden md:table-cell">이용 일정</th>
+                        <th class="p-1 sm:p-2 border-r border-gray-800 text-center break-keep w-20 sm:w-32">선택 차종</th>
+                        <th class="p-1 sm:p-2 text-center break-keep w-16 sm:w-20">관리</th>
                     </tr>
                 </thead>
                 <tbody id="admin-table-body"></tbody>
@@ -451,12 +449,11 @@
         </div>
     </div>
 
-    <!-- 중복 예약 확인 모달 추가 -->
     <div id="duplicate-modal" class="hidden fixed inset-0 bg-black/95 z-[105] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-frame p-2 rounded-xl shadow-2xl w-full max-w-sm">
             <div class="bg-[#0a0a0a] border border-gray-700 p-6 rounded-lg text-center">
                 <p class="text-white font-black text-xl mb-2 break-keep">예약 내역 존재</p>
-                <p class="text-gray-400 text-sm font-bold mb-6 break-keep leading-relaxed">이미 동일한 정보로 등록된 예약 내역이 있습니다.<br>추가로 차량을 예약하시겠습니까?</p>
+                <p class="text-gray-400 text-sm font-bold mb-6 break-keep leading-relaxed">입력하신 정보(이름, 생년월일, 연락처)와 동일한 예약 내역이 이미 존재합니다.<br>추가로 예약하시겠습니까?</p>
                 <div class="flex gap-2">
                     <button onclick="closeDuplicateModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded hover:bg-gray-800 transition-colors">취소</button>
                     <button onclick="proceedToConfirmModal()" class="flex-1 metallic-bg text-black py-3 font-black rounded shadow-lg hover:brightness-110 transition-colors">추가 예약하기</button>
@@ -554,7 +551,7 @@
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 고객님의 파이어베이스 설정값 (변경 없이 사용 가능)
+    // 고객님의 파이어베이스 설정값
     const firebaseConfig = {
         apiKey: "AIzaSyCr4qXXfwIjxwyWILzBPi2SX_e7TLvAe8o",
         authDomain: "car-698fe.firebaseapp.com",
@@ -568,10 +565,11 @@
     const appId = 'premium-rentcar';
     const app = initializeApp(firebaseConfig);
     
+    // 테스트 환경 애널리틱스 에러 무시
     let analytics;
     isSupported().then(supported => {
         if (supported) { analytics = getAnalytics(app); }
-    }).catch(err => console.log("Analytics bypassed in test environment."));
+    }).catch(err => console.log("Analytics bypassed."));
 
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -656,7 +654,7 @@
                 confirmContainer.style.display = 'block'; 
                 pwInput.placeholder = "간단비밀번호설정";
             }
-            pwInput.focus();
+            pwInput.focus(); // 번호 입력 완료 시 자동 포커스
         } else {
             confirmContainer.style.display = 'block';
             pwInput.placeholder = "간단비밀번호설정";
@@ -767,8 +765,8 @@
         if (!date) return showMsg("수령 일자를 선택해주세요.");
         if (!policy) return showMsg("이용 정책 및 유의 사항에 동의해주세요 (필수).");
 
-        // 중복 예약 확인 로직
-        const isDuplicate = memoryDatabase.some(r => r.name === name && r.phone === phone);
+        // 이름 + 생년월일 + 연락처가 모두 동일한 내역 검사
+        const isDuplicate = memoryDatabase.some(r => r.name === name && r.birth === birth && r.phone === phone);
         
         if (isDuplicate) {
             document.getElementById('duplicate-modal').style.display = 'flex';
@@ -910,7 +908,7 @@
             if (newStatus === '이용완료') cClass = "border-gray-600 text-gray-500";
             if (newStatus === '취소') cClass = "border-red-500 text-red-500";
 
-            selectElement.className = `bg-[#111] border p-1.5 rounded font-black outline-none ${cClass} cursor-pointer transition-colors`;
+            selectElement.className = `bg-[#111] border p-1 rounded font-bold outline-none ${cClass} cursor-pointer transition-colors w-full text-center text-xs`;
             
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reservations', record.docId);
             await updateDoc(docRef, { status: newStatus });
@@ -988,7 +986,7 @@
 
         sorted.forEach(record => {
             const d = new Date(record.createdAt);
-            const req = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            const req = `${d.getMonth()+1}/${d.getDate()} <br><span class="text-gray-500">${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span>`;
             
             let rClass = record.status === '이용완료' || record.status === '취소' ? "border-b border-gray-800 text-gray-600 bg-[#050505]" : "border-b border-gray-800 text-white hover:bg-[#1a1a1a]";
             let cClass = "border-gray-600 text-white";
@@ -999,7 +997,7 @@
             if (record.status === '이용완료') cClass = "border-gray-600 text-gray-500";
             if (record.status === '취소') cClass = "border-red-500 text-red-500";
 
-            const selHtml = `<select class="bg-[#111] border p-1.5 rounded font-black outline-none ${cClass} cursor-pointer transition-colors" onchange="changeRecordStatus('${record.id}', this)">
+            const selHtml = `<select class="bg-[#111] border p-1 rounded font-bold outline-none ${cClass} cursor-pointer transition-colors w-full text-center text-[10px] sm:text-xs" onchange="changeRecordStatus('${record.id}', this)">
                 <option value="신청완료" ${record.status==='신청완료'?'selected':''}>신청완료</option>
                 <option value="배차준비" ${record.status==='배차준비'?'selected':''}>배차준비</option>
                 <option value="배차완료" ${record.status==='배차완료'?'selected':''}>배차완료</option>
@@ -1011,22 +1009,24 @@
             const tr = document.createElement('tr');
             tr.id = `row-${record.id}`; tr.className = rClass;
             tr.innerHTML = `
-                <td class="p-3 border-r border-gray-800 whitespace-nowrap text-center">${req}</td>
-                <td class="p-3 border-r border-gray-800 text-center">${selHtml}</td>
-                <td class="p-3 border-r border-gray-800 font-black whitespace-nowrap text-center">
-                    ${record.name}<br><span class="text-xs text-gray-500 font-bold">${record.birth || '-'}</span>
+                <td class="p-1 sm:p-2 border-r border-gray-800 text-center break-keep w-14 sm:w-20 leading-tight">${req}</td>
+                <td class="p-1 sm:p-2 border-r border-gray-800 text-center w-20 sm:w-24 px-1">${selHtml}</td>
+                <td class="p-1 sm:p-2 border-r border-gray-800 font-black text-center break-keep w-16 sm:w-24">
+                    ${record.name}<br><span class="text-[10px] text-gray-500 font-bold">${record.birth || '-'}</span>
                 </td>
-                <td class="p-3 border-r border-gray-800 font-bold whitespace-nowrap tracking-wider text-center">${record.phone}</td>
-                <td class="p-3 border-r border-gray-800 text-xs whitespace-nowrap text-center">
-                    <span class="text-blue-400 font-bold">인수:</span> ${record.date} 오전 ${record.time} <span class="text-gray-500">(${record.days || 1}일)</span><br>
-                    <span class="text-red-400 font-bold">반납:</span> ${record.returnDateText} 오전 ${record.time}
+                <td class="p-1 sm:p-2 border-r border-gray-800 font-bold text-center tracking-tighter break-keep w-24 sm:w-32">${record.phone}</td>
+                <td class="p-1 sm:p-2 border-r border-gray-800 text-center break-keep leading-tight hidden md:table-cell">
+                    <span class="text-blue-400 font-bold">인수:</span> ${record.date} ${record.time} <span class="text-gray-500 text-[10px]">(${record.days || 1}일)</span><br>
+                    <span class="text-red-400 font-bold">반납:</span> ${record.returnDateText} ${record.time}
                 </td>
-                <td class="p-3 border-r border-gray-800 font-black whitespace-nowrap text-center">
-                    <span class="text-[10px] text-gray-500 block">${record.carType}</span>${record.carModels}
+                <td class="p-1 sm:p-2 border-r border-gray-800 font-black text-center break-keep w-20 sm:w-32">
+                    <span class="text-[10px] text-gray-500 block">${record.carType}</span><span>${record.carModels}</span>
                 </td>
-                <td class="p-3 flex gap-1 justify-center min-w-[100px]">
-                    <button onclick="editRecord('${record.id}')" class="bg-blue-900 text-white px-3 py-2 rounded text-xs font-bold hover:bg-blue-800 transition-colors">수정</button>
-                    <button onclick="deleteRecord('${record.id}')" class="bg-red-900 text-white px-3 py-2 rounded text-xs font-bold hover:bg-red-800 transition-colors">삭제</button>
+                <td class="p-1 sm:p-2 w-16 sm:w-20">
+                    <div class="flex flex-col gap-1 justify-center">
+                        <button onclick="editRecord('${record.id}')" class="w-full bg-blue-900 text-white py-1 rounded text-[10px] sm:text-xs font-bold hover:bg-blue-800 transition-colors">수정</button>
+                        <button onclick="deleteRecord('${record.id}')" class="w-full bg-red-900 text-white py-1 rounded text-[10px] sm:text-xs font-bold hover:bg-red-800 transition-colors">삭제</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1089,12 +1089,10 @@
         switchView('login'); 
 
         try {
-            try {
-                await signInAnonymously(auth);
-            } catch (authError) {
-                if(authError.code !== 'auth/custom-token-mismatch') {
-                    console.warn("Auth check:", authError);
-                }
+            // 테스트 환경 Auth 에러 방어 로직
+            try { await signInAnonymously(auth); } 
+            catch (authError) {
+                if(authError.code !== 'auth/custom-token-mismatch') console.warn("Auth Info:", authError);
             }
 
             onSnapshot(usersCollection, (snapshot) => {
