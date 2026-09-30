@@ -35,17 +35,6 @@
             transition: background-color 5000s ease-in-out 0s;
         }
 
-        .admin-table-wrapper {
-            -ms-overflow-style: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #555 #111;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .admin-table-wrapper::-webkit-scrollbar { display: block; height: 10px; }
-        .admin-table-wrapper::-webkit-scrollbar-track { background: #111; border-radius: 0 0 8px 8px; }
-        .admin-table-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 8px; border: 2px solid #111; }
-        
         body {
             font-family: 'Pretendard', sans-serif;
             background-color: #000000;
@@ -221,6 +210,7 @@
         <div class="py-20 px-6 text-center border-b border-gray-800">
             <h2 class="text-3xl md:text-4xl font-black mb-12 text-white">프리미엄 라인업</h2>
             <div class="bg-frame p-2 md:p-3 rounded-xl shadow-2xl max-w-4xl mx-auto">
+                <!-- 차량 및 요금 안내 영역 추가 -->
                 <div id="car-list-container" class="bg-[#0a0a0a] border border-gray-700 p-4 md:p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- 자바스크립트를 통해 차량 리스트가 렌더링 됩니다. -->
                 </div>
@@ -546,7 +536,8 @@
                 <h2 class="text-2xl font-black text-white">관리자 모드</h2>
                 <div class="flex gap-4">
                     <button onclick="switchAdminTab('res')" id="tab-res" class="text-yellow-400 font-black border-b-2 border-yellow-400 pb-1 px-1">예약 관리</button>
-                    <button onclick="switchAdminTab('inq')" id="tab-inq" class="text-gray-500 font-bold border-b-2 border-transparent pb-1 px-1 hover:text-gray-300">문의 관리</button>
+                    <button onclick="switchAdminTab('inq')" id="tab-inq" class="text-gray-500 font-bold border-b-2 border-transparent pb-1 px-1 hover:text-gray-300 transition">문의 관리</button>
+                    <button onclick="checkSuperAdminAccess()" id="tab-user" class="text-gray-500 font-bold border-b-2 border-transparent pb-1 px-1 hover:text-gray-300 transition">회원 관리 🔒</button>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -578,6 +569,21 @@
                 <!-- JS 렌더링 영역 -->
             </div>
             <div id="admin-inq-empty" class="hidden text-center text-gray-500 py-20 font-bold bg-[#0a0a0a] rounded-lg border border-gray-700">등록된 문의가 없습니다.</div>
+        </div>
+
+        <div id="admin-user-container" class="hidden rounded-lg border border-gray-700 bg-[#0a0a0a] shadow-2xl flex-1 mb-10 overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-[#111] text-gray-400 font-bold border-b border-gray-700">
+                    <tr>
+                        <th class="p-2 border-r border-gray-800 text-center break-keep">가입일시</th>
+                        <th class="p-2 border-r border-gray-800 text-center break-keep">아이디 (연락처)</th>
+                        <th class="p-2 border-r border-gray-800 text-center break-keep">비밀번호</th>
+                        <th class="p-2 text-center break-keep w-24">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-user-table-body"></tbody>
+            </table>
+            <div id="admin-user-empty" class="hidden text-center text-gray-500 py-20 font-bold">등록된 회원이 없습니다.</div>
         </div>
     </div>
 
@@ -636,6 +642,20 @@
                 <div class="flex gap-2">
                     <button onclick="closePwModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded">취소</button>
                     <button onclick="checkAdminPw()" class="flex-1 metallic-bg text-black py-3 font-black rounded hover:brightness-110">접속</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="super-pw-modal" class="hidden fixed inset-0 bg-black/95 z-[130] flex items-center justify-center p-4">
+        <div class="bg-frame p-2 rounded-xl w-full max-w-sm shadow-2xl border border-red-900/50">
+            <div class="bg-[#0a0a0a] border border-red-900/50 p-6 rounded-lg text-center">
+                <h3 class="text-red-500 font-black text-lg mb-2">최고 관리자 접속 🔒</h3>
+                <p class="text-gray-400 text-xs font-bold mb-4">회원 정보 열람을 위한 보안 비밀번호 입력</p>
+                <input type="password" id="super-pw-input" autocomplete="new-password" class="input-base text-center mb-4 border-red-900/50 focus:border-red-500" placeholder="최고 관리자 비밀번호" onkeyup="if(window.event.keyCode===13){verifySuperAdminPw();}">
+                <div class="flex gap-2">
+                    <button onclick="closeSuperPwModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded">취소</button>
+                    <button onclick="verifySuperAdminPw()" class="flex-1 bg-red-900 text-white py-3 font-black rounded hover:bg-red-800">접속</button>
                 </div>
             </div>
         </div>
@@ -726,12 +746,35 @@
             </div>
         </div>
     </div>
+
+    <div id="admin-user-edit-modal" class="hidden fixed inset-0 bg-black/95 z-[110] flex items-center justify-center p-4">
+        <div class="bg-frame p-2 rounded-xl shadow-2xl w-full max-w-sm">
+            <div class="bg-[#0a0a0a] border border-gray-700 p-5 rounded-lg text-left">
+                <h3 class="text-white font-black text-xl mb-4 text-center">회원 정보 수정</h3>
+                <div class="space-y-4">
+                    <input type="hidden" id="edit-user-docid">
+                    <div>
+                        <label class="block text-gray-400 font-bold text-sm mb-1">아이디 (연락처)</label>
+                        <input type="tel" id="edit-user-phone" autocomplete="off" class="input-base text-sm py-2 px-3 tracking-widest" oninput="autoHyphenPhone(this)" maxlength="13">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-bold text-sm mb-1">비밀번호</label>
+                        <input type="text" id="edit-user-pw" autocomplete="off" class="input-base text-sm py-2 px-3">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="closeUserEditModal()" class="flex-1 bg-[#222] py-3 text-white font-bold rounded">취소</button>
+                    <button onclick="saveUserEdit()" class="flex-1 metallic-bg text-black py-3 font-black rounded hover:brightness-110">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -788,6 +831,7 @@
     let inquiriesDB = [];
     let currentApplicationData = null;
     let currentUserPhone = null;
+    let isSuperAdmin = false; // 최고 관리자 인증 여부
 
     let adminTapCount = 0;
     let adminTapTimeout;
@@ -871,6 +915,7 @@
 
     window.logout = function() {
         currentUserPhone = null;
+        isSuperAdmin = false;
         document.getElementById('login-phone').value = '';
         document.getElementById('login-pw').value = '';
         document.getElementById('login-pw-confirm').value = '';
@@ -902,8 +947,7 @@
             loadMyPageData();
         } else if (viewName === 'admin') {
             document.getElementById('view-admin').style.display = 'flex';
-            loadAdminData();
-            renderAdminInquiries();
+            switchAdminTab('res');
         }
     };
 
@@ -1076,20 +1120,45 @@
         else { showMsg('비밀번호가 일치하지 않습니다.'); }
     };
 
+    window.checkSuperAdminAccess = function() {
+        if (isSuperAdmin) {
+            switchAdminTab('user');
+        } else {
+            document.getElementById('super-pw-input').value = '';
+            document.getElementById('super-pw-modal').style.display = 'flex';
+        }
+    };
+    window.closeSuperPwModal = function() { document.getElementById('super-pw-modal').style.display = 'none'; };
+    window.verifySuperAdminPw = function() {
+        const pw = document.getElementById('super-pw-input').value;
+        if (pw === 'Net05217798') {
+            isSuperAdmin = true;
+            closeSuperPwModal();
+            switchAdminTab('user');
+        } else {
+            showMsg('최고 관리자 비밀번호가 일치하지 않습니다.');
+        }
+    };
+
     window.switchAdminTab = function(tabName) {
         document.getElementById('admin-res-container').style.display = tabName === 'res' ? 'block' : 'none';
         document.getElementById('admin-inq-container').style.display = tabName === 'inq' ? 'flex' : 'none';
+        document.getElementById('admin-user-container').style.display = tabName === 'user' ? 'block' : 'none';
         
         const resBtn = document.getElementById('tab-res');
         const inqBtn = document.getElementById('tab-inq');
+        const userBtn = document.getElementById('tab-user');
         
-        if(tabName === 'res') {
-            resBtn.className = "text-yellow-400 font-black border-b-2 border-yellow-400 pb-1 px-1";
-            inqBtn.className = "text-gray-500 font-bold border-b-2 border-transparent pb-1 px-1 hover:text-gray-300 transition";
-        } else {
-            resBtn.className = "text-gray-500 font-bold border-b-2 border-transparent pb-1 px-1 hover:text-gray-300 transition";
-            inqBtn.className = "text-yellow-400 font-black border-b-2 border-yellow-400 pb-1 px-1";
-        }
+        const activeClass = "text-yellow-400 font-black border-b-2 border-yellow-400 pb-1 px-1";
+        const inactiveClass = "text-gray-500 font-bold border-b-2 border-transparent pb-1 px-1 hover:text-gray-300 transition";
+
+        resBtn.className = tabName === 'res' ? activeClass : inactiveClass;
+        inqBtn.className = tabName === 'inq' ? activeClass : inactiveClass;
+        userBtn.className = tabName === 'user' ? activeClass : inactiveClass;
+
+        if (tabName === 'res') loadAdminData();
+        else if (tabName === 'inq') renderAdminInquiries();
+        else if (tabName === 'user') renderAdminUsers();
     };
 
     window.changeRecordStatus = async function(recordId, selectElement) {
@@ -1128,6 +1197,13 @@
         document.getElementById('delete-confirm-modal').style.display = 'flex';
     };
 
+    window.requestDeleteUser = function(docId) {
+        deleteTarget = docId;
+        deleteType = 'user';
+        document.getElementById('delete-confirm-msg').innerText = "해당 회원(가입 이력)을 영구적으로 삭제하시겠습니까?";
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+    };
+
     window.closeDeleteModal = function() {
         document.getElementById('delete-confirm-modal').style.display = 'none';
         deleteTarget = null;
@@ -1145,6 +1221,9 @@
             }
         } else if (deleteType === 'inquiry') {
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'inquiries', deleteTarget);
+            await deleteDoc(docRef);
+        } else if (deleteType === 'user') {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', deleteTarget);
             await deleteDoc(docRef);
         }
         
@@ -1443,6 +1522,71 @@
         showMsg('문의 수정이 완료되었습니다.');
     };
 
+    window.renderAdminUsers = function() {
+        const tbody = document.getElementById('admin-user-table-body');
+        const emptyState = document.getElementById('admin-user-empty');
+        tbody.innerHTML = '';
+        
+        const sorted = [...usersDB].sort((a, b) => b.createdAt - a.createdAt);
+        if (sorted.length === 0) { emptyState.style.display = 'block'; return; }
+        emptyState.style.display = 'none';
+
+        sorted.forEach(user => {
+            const d = new Date(user.createdAt);
+            const joinDate = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-gray-800 text-white hover:bg-[#1a1a1a]";
+            tr.innerHTML = `
+                <td class="p-3 border-r border-gray-800 text-center text-xs text-gray-400 break-keep leading-tight">${joinDate}</td>
+                <td class="p-3 border-r border-gray-800 font-black text-center text-yellow-400 tracking-widest break-keep">${user.phone}</td>
+                <td class="p-3 border-r border-gray-800 font-bold text-center break-keep">${user.password}</td>
+                <td class="p-3 w-24">
+                    <div class="flex flex-col gap-1 justify-center">
+                        <button onclick="editUser('${user.docId}')" class="w-full bg-blue-900 text-white py-1 rounded text-[10px] sm:text-xs font-bold hover:bg-blue-800 transition-colors mb-1">수정</button>
+                        <button onclick="requestDeleteUser('${user.docId}')" class="w-full bg-red-900 text-white py-1 rounded text-[10px] sm:text-xs font-bold hover:bg-red-800 transition-colors">삭제</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    };
+
+    window.editUser = function(docId) {
+        const user = usersDB.find(u => u.docId === docId);
+        if(!user) return;
+        
+        document.getElementById('edit-user-docid').value = user.docId;
+        document.getElementById('edit-user-phone').value = user.phone;
+        document.getElementById('edit-user-pw').value = user.password;
+        
+        document.getElementById('admin-user-edit-modal').style.display = 'flex';
+    };
+
+    window.closeUserEditModal = function() {
+        document.getElementById('admin-user-edit-modal').style.display = 'none';
+    };
+
+    window.saveUserEdit = async function() {
+        if (!auth.currentUser) return;
+        const docId = document.getElementById('edit-user-docid').value;
+        const phone = document.getElementById('edit-user-phone').value.trim();
+        const pw = document.getElementById('edit-user-pw').value.trim();
+        
+        if(phone.length < 12) return showMsg('올바른 핸드폰 번호를 입력해주세요.');
+        if(!pw) return showMsg('비밀번호를 입력해주세요.');
+        
+        // 동일 번호 중복 방지 로직
+        const isDuplicatePhone = usersDB.some(u => u.phone === phone && u.docId !== docId);
+        if (isDuplicatePhone) return showMsg('이미 가입된 핸드폰 번호입니다.');
+
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', docId);
+        await updateDoc(docRef, { phone: phone, password: pw });
+        
+        closeUserEditModal();
+        showMsg('회원 정보 수정이 완료되었습니다.');
+    };
+
     window.onload = async function() {
         const carListContainer = document.getElementById('car-list-container');
         const carSelect = document.getElementById('input-car');
@@ -1484,18 +1628,17 @@
 
         try {
             try { 
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch (authError) {
-                console.warn("Auth initialization bypassed:", authError);
+                console.warn("Auth initialization bypassed due to preview constraints:", authError);
             }
 
             onSnapshot(usersCollection, (snapshot) => {
                 usersDB = [];
                 snapshot.forEach(doc => usersDB.push({ docId: doc.id, ...doc.data() }));
+                if (document.getElementById('view-admin').style.display === 'flex' && isSuperAdmin) {
+                    renderAdminUsers();
+                }
             }, (error) => console.error("Firebase Users Error:", error));
 
             onSnapshot(reservationsCollection, (snapshot) => {
